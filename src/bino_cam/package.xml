@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package>
-  <name>bino-cam</name>
+  <name>bino_cam</name>
   <version>0.0.0</version>
-  <description>The bino-cam package</description>
+  <description>The bino_cam package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="1102115m@student.gla.ac.uk">Andrew McDonald</maintainer>
+  <maintainer email="ros@todo.todo">ros</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/bino-cam</url> -->
+  <!-- <url type="website">http://wiki.ros.org/bino_cam</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
