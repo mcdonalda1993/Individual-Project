@@ -2,16 +2,19 @@ import cv2
 from helper_functions import *
 
 
-window_name = "Binocular vision"
-taskbar_name = "Display mode"
-cv2.namedWindow(window_name)
-cv2.createTrackbar(taskbar_name, window_name, 0, noOfDisplayOptions()-1, callback )	
+windowName = "Binocular vision"
+taskbarName = "Display mode"
+cv2.namedWindow(windowName)
+cv2.createTrackbar(taskbarName, windowName, 0, noOfDisplayOptions()-1, callback )	
 
 # disableAutoFocus()
 
 cam0 = cv2.VideoCapture(0)
 cam1 = cv2.VideoCapture(1)
-	
+
+setCameraResolution(cam0, 640, 480)
+setCameraResolution(cam1, 640, 480)
+
 while(True):
 	
 	frame = None
@@ -26,7 +29,7 @@ while(True):
 	frame2 = getFrame(cam1)
 	
 	# Display the resulting frame
-	display(window_name, cv2.getTrackbarPos(taskbar_name, window_name), frame, frame2)
+	display(windowName, cv2.getTrackbarPos(taskbarName, windowName), frame, frame2)
 	
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
