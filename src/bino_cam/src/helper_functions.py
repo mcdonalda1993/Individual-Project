@@ -1,18 +1,29 @@
-import sys
-import os
-import Tkinter
 
-def checkCamera(cam):
-	if(cam.isOpened()==False):
-		sys.exit("A camera is not detected")
+import os
+import numpy as np
+import cv2
+
+display_options = ["Side by side", "Red-Green"]
+width = 0 
+height = 0
+
+def noOfDisplayOptions():
+	return len(display_options)
+
+def getCamera(cam, number):
+	if (cam == None) or (cam.isOpened() == False):
+		return cv2.VideoCapture(number)
+		
+def getFrame(cam):
+	global height, width
+	try:
+		ret, frame = cam.read()
+		(height, width, depth) = frame.shape
+		return frame
+	except:
+		return None
 		
 def disableAutoFocus():
-	# Try first, need to sudo apt-get install uvcdynctrl
-	os.system('uvcdynctrl --device=/dev/video0 --set=\'Focus, Auto\' 0')
-	os.system('uvcdynctrl --device=/dev/video0 --set=\'Focus (absolute)\' 20')
-	os.system('uvcdynctrl --device=/dev/video1 --set=\'Focus, Auto\' 0')
-	os.system('uvcdynctrl --device=/dev/video1 --set=\'Focus (absolute)\' 20')
-	
 	## If that doesn't work try, sudo apt-get install v4l-utils
 	os.system('v4l2-ctl -d 0 -c focus_auto=0')
 	os.system('v4l2-ctl -d 0 -c focus_absolute=20')
@@ -20,32 +31,27 @@ def disableAutoFocus():
 	os.system('v4l2-ctl -d 1 -c focus_absolute=20')
 
 def setFocus(cam, focus):
-	# Try
-	os.system('uvcdynctrl --device=/dev/video' + str(cam) +  ' --set=\'Focus (absolute)\' ' + str(focus))
-	# or
 	os.system('v4l2-ctl -d '+ str(cam) +' -c focus_absolute=' + str(focus))
-
-def run(cam1, cam2):
 	
-top = Tkinter.Tk()
-# Code to add widgets will go here...
-frame = Frame(top)
-frame.pack()
+def callback(value):
+	pass
 
-redbutton = Button(frame, text="Red", fg="red")
-redbutton.pack( side = LEFT)
+def display(window, choice, frame, frame2):
+	if(choice==0):
+		sideBySide(window, frame, frame2)
+	elif(choice==1):
+		pass
 
-top.mainloop()
-	
-	while(True):
-	    
-	    # Capture frame-by-frame
-	    ret, frame = cam1.read()
-	    ret2, frame2 = cam2.read()
+def returnValidImage(image):
+	if image != None:
+		return image
+	else:
+		blank_image = np.zeros((height,width,3), np.uint8)
+		return blank_image
 
-	    # Display the resulting frame
-	    cv2.imshow('frame', frame)
-	    cv2.imshow('frame2', frame2)
-	    
-	    if cv2.waitKey(1) & 0xFF == ord('q'):
-	        break
+def sideBySide(window, frame, frame2):
+	image = None
+	imagePart1 = returnValidImage(frame)
+	imagePart2 = returnValidImage(frame2)
+	image = np.hstack((imagePart1, imagePart2))
+	cv2.imshow(window, image)
