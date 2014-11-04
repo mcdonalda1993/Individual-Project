@@ -72,12 +72,14 @@ def redGreen(window, frame, frame2):
 
 def getRedImage(image):
 	red = np.zeros((height, width, 3), np.uint8)
-	red[:,:,2] = image[:,:,2]	#(B, G, R)
+	if image != None:
+		red[:,:,2] = image[:,:,2]	#(B, G, R)
 	return red
 	
 def getGreenBlueImage(image):
 	greenBlue = np.zeros((height, width, 3), np.uint8)
-	greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
+	if image != None:
+		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
 	return  greenBlue
 
 def getDistance(window):
