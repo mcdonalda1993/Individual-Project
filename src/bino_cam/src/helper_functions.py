@@ -70,13 +70,13 @@ def redGreen(window, frame, frame2):
 	cv2.imshow(window, image)
 	cv2.createTrackbar(taskbarName, window, getDistance(window), width, callback)	
 
-def getRedImage(image):
+def getRedImage(image=None):
 	red = np.zeros((height, width, 3), np.uint8)
 	if image != None:
 		red[:,:,2] = image[:,:,2]	#(B, G, R)
 	return red
 	
-def getGreenBlueImage(image):
+def getGreenBlueImage(image=None):
 	greenBlue = np.zeros((height, width, 3), np.uint8)
 	if image != None:
 		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
