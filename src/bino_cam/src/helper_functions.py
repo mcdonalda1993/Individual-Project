@@ -3,13 +3,9 @@ import os
 import numpy as np
 import cv2
 
-displayOptions = ["Side by side", "Red-Green"]
-taskbarName = "Distance"
 width = 0 
 height = 0
 
-def noOfDisplayOptions():
-	return len(displayOptions)
 	
 def getCamera(cam, number):
 	if (cam == None) or (cam.isOpened() == False):
@@ -21,11 +17,8 @@ def getFrame(cam):
 		return frame
 	except:
 		return None
-		
-def getRedGreenTaskbarName():
-	return taskbarName
 
-def getDistance(window):
+def getDistance(window, taskbarName):
 	position = cv2.getTrackbarPos(taskbarName, window)
 	if(position == -1):
 		return 0
@@ -61,19 +54,19 @@ def setCameraResolutions16x9(cam, cam2, h):
 def callback(value):
 	pass
 
-def sideBySide(window, frame, frame2):
+def sideBySide(frame, frame2):
 	image = None
 	imagePart1 = __returnValidImage(frame)
 	imagePart2 = __returnValidImage(frame2)
 	image = np.hstack((imagePart1, imagePart2))
-	cv2.imshow(window, image)
+	return image
 
-def redGreen(window, frame, frame2):
+def redGreen(distance, frame, frame2):
 	image = None
 	imagePart1 = __getRedImage(frame)
 	imagePart2 = __getGreenBlueImage(frame2)
-	image = __combineImages(getDistance(window), imagePart1, imagePart2)
-	cv2.imshow(window, image)
+	image = __combineImages(distance, imagePart1, imagePart2)
+	return image
 
 def __setCameraResolution(cam, w, h):
 	global width, height 

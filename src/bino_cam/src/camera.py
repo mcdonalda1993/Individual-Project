@@ -4,8 +4,13 @@ from helper_functions import *
 
 windowName = "Binocular vision"
 taskbarName = "Display mode"
+
+displayOptions = ["Side by side", "Red-Green"]
+
+distanceTaskbar = "Distance"
+
 cv2.namedWindow(windowName)
-cv2.createTrackbar(taskbarName, windowName, 0, noOfDisplayOptions()-1, callback )	
+cv2.createTrackbar(taskbarName, windowName, 0, len(displayOptions)-1, callback )	
 
 # disableAutoFocus()
 
@@ -30,12 +35,14 @@ while(True):
 	choice = cv2.getTrackbarPos(taskbarName, windowName)
 	
 	# Display the resulting frame
+	image = None
 	if(choice==0):
-		sideBySide(windowName, frame, frame2)
+		image = sideBySide(frame, frame2)
 	elif(choice==1):
-		cv2.createTrackbar(getRedGreenTaskbarName(), windowName, getDistance(windowName), getWidth(), callback)
-		redGreen(windowName, frame, frame2)
-
+		cv2.createTrackbar(distanceTaskbar, windowName, getDistance(windowName, distanceTaskbar), getWidth(), callback)
+		image = redGreen(getDistance(windowName, distanceTaskbar), frame, frame2)
+	
+	cv2.imshow(windowName, image)
 	
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
