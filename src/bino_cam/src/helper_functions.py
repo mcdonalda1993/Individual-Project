@@ -47,52 +47,9 @@ def getFrame(cam):
 		return frame
 	except:
 		return None
-
-def display(window, choice, frame, frame2):
-	if(choice==0):
-		sideBySide(window, frame, frame2)
-	elif(choice==1):
-		redGreen(window, frame, frame2)
-
-def sideBySide(window, frame, frame2):
-	image = None
-	imagePart1 = returnValidImage(frame)
-	imagePart2 = returnValidImage(frame2)
-	image = np.hstack((imagePart1, imagePart2))
-	cv2.imshow(window, image)
-
-def returnValidImage(image):
-def __setCameraResolution(cam, w, h):
-	global width, height 
-	cam.set(3, w)
-	cam.set(4, h)
-	width = int(cam.get(3))
-	height = int(cam.get(4))
-	if image != None:
-		return image
-	else:
-		blank_image = np.zeros((height, width, 3), np.uint8)
-		return blank_image
-
-def redGreen(window, frame, frame2):
-	image = None
-	imagePart1 = getRedImage(frame)
-	imagePart2 = getGreenBlueImage(frame2)
-	image = combineImages(getDistance(window), imagePart1, imagePart2)
-	cv2.imshow(window, image)
-	cv2.createTrackbar(taskbarName, window, getDistance(window), width, callback)	
-
-def getRedImage(image=None):
-	red = np.zeros((height, width, 3), np.uint8)
-	if image != None:
-		red[:,:,2] = image[:,:,2]	#(B, G, R)
-	return red
-	
-def getGreenBlueImage(image=None):
-	greenBlue = np.zeros((height, width, 3), np.uint8)
-	if image != None:
-		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
-	return  greenBlue
+		
+def getRedGreenTaskbarName():
+	return taskbarName
 
 def getDistance(window):
 	position = cv2.getTrackbarPos(taskbarName, window)
@@ -100,8 +57,51 @@ def getDistance(window):
 		return 0
 	else:
 		return position
+		
+def getWidth():
+	return width
 
-def combineImages(distance, image1, image2):
+def sideBySide(window, frame, frame2):
+	image = None
+	imagePart1 = __returnValidImage(frame)
+	imagePart2 = __returnValidImage(frame2)
+	image = np.hstack((imagePart1, imagePart2))
+	cv2.imshow(window, image)
+
+def redGreen(window, frame, frame2):
+	image = None
+	imagePart1 = __getRedImage(frame)
+	imagePart2 = __getGreenBlueImage(frame2)
+	image = __combineImages(getDistance(window), imagePart1, imagePart2)
+	cv2.imshow(window, image)
+
+def __setCameraResolution(cam, w, h):
+	global width, height 
+	cam.set(3, w)
+	cam.set(4, h)
+	width = int(cam.get(3))
+	height = int(cam.get(4))
+
+def __returnValidImage(image):
+	if image != None:
+		return image
+	else:
+		blank_image = np.zeros((height, width, 3), np.uint8)
+		return blank_image
+
+def __getRedImage(image=None): 
+	red = np.zeros((height, width, 3), np.uint8)
+	if image != None:
+		red[:,:,2] = image[:,:,2]	#(B, G, R)
+	return red
+	
+def __getGreenBlueImage(image=None): 
+	greenBlue = np.zeros((height, width, 3), np.uint8)
+	if image != None:
+		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
+	return  greenBlue
+
+def __combineImages(distance, image1, image2):
 	totalWidth = width + distance
 	image = np.zeros((height, totalWidth, 3), np.uint8)
 	image[:, :width, 2] = image1[:, :, 2]

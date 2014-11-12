@@ -27,8 +27,15 @@ while(True):
 	frame = getFrame(cam0)
 	frame2 = getFrame(cam1)
 	
+	choice = cv2.getTrackbarPos(taskbarName, windowName)
+	
 	# Display the resulting frame
-	display(windowName, cv2.getTrackbarPos(taskbarName, windowName), frame, frame2)
+	if(choice==0):
+		sideBySide(windowName, frame, frame2)
+	elif(choice==1):
+		cv2.createTrackbar(getRedGreenTaskbarName(), windowName, getDistance(windowName), getWidth(), callback)
+		redGreen(windowName, frame, frame2)
+
 	
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
