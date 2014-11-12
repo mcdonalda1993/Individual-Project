@@ -12,8 +12,7 @@ cv2.createTrackbar(taskbarName, windowName, 0, noOfDisplayOptions()-1, callback 
 cam0 = cv2.VideoCapture(0)
 cam1 = cv2.VideoCapture(1)
 
-setCameraResolution(cam0, 640, 480)
-setCameraResolution(cam1, 640, 480)
+setCameraResolutions16x9(cam0, cam1, 720)
 
 while(True):
 	

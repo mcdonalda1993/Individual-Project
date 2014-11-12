@@ -23,13 +23,19 @@ def disableAutoFocus():
 
 def setFocus(cam, focus):
 	os.system('v4l2-ctl -d '+ str(cam) +' -c focus_absolute=' + str(focus))
+	
+def setCameraResolutions(cam, cam2, w, h):
+	if(cam != None and cam.isOpened()):
+		__setCameraResolution(cam, w, h)
+	if(cam2 != None and cam2.isOpened()):
+		__setCameraResolution(cam2, w, h)
 
-def setCameraResolution(cam, w, h):
-	global width, height 
-	width = w
-	height = h
-	cam.set(3, width)
-	cam.set(4, height)	
+def setCameraResolutions16x9(cam, cam2, h):
+	w = 16 * (h/9)
+	if(cam != None):
+		__setCameraResolution(cam, w, h)
+	if(cam2 != None):
+		__setCameraResolution(cam2, w, h)
 
 def getCamera(cam, number):
 	if (cam == None) or (cam.isOpened() == False):
@@ -56,6 +62,12 @@ def sideBySide(window, frame, frame2):
 	cv2.imshow(window, image)
 
 def returnValidImage(image):
+def __setCameraResolution(cam, w, h):
+	global width, height 
+	cam.set(3, w)
+	cam.set(4, h)
+	width = int(cam.get(3))
+	height = int(cam.get(4))
 	if image != None:
 		return image
 	else:
