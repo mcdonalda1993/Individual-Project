@@ -10,9 +10,30 @@ height = 0
 
 def noOfDisplayOptions():
 	return len(displayOptions)
+	
+def getCamera(cam, number):
+	if (cam == None) or (cam.isOpened() == False):
+		return cv2.VideoCapture(number)
+		
+def getFrame(cam):
+	try:
+		ret, frame = cam.read()
+		return frame
+	except:
+		return None
+		
+def getRedGreenTaskbarName():
+	return taskbarName
 
-def callback(value):
-	pass
+def getDistance(window):
+	position = cv2.getTrackbarPos(taskbarName, window)
+	if(position == -1):
+		return 0
+	else:
+		return position
+		
+def getWidth():
+	return width
 		
 def disableAutoFocus():
 	## If that doesn't work try, sudo apt-get install v4l-utils
@@ -37,29 +58,8 @@ def setCameraResolutions16x9(cam, cam2, h):
 	if(cam2 != None):
 		__setCameraResolution(cam2, w, h)
 
-def getCamera(cam, number):
-	if (cam == None) or (cam.isOpened() == False):
-		return cv2.VideoCapture(number)
-		
-def getFrame(cam):
-	try:
-		ret, frame = cam.read()
-		return frame
-	except:
-		return None
-		
-def getRedGreenTaskbarName():
-	return taskbarName
-
-def getDistance(window):
-	position = cv2.getTrackbarPos(taskbarName, window)
-	if(position == -1):
-		return 0
-	else:
-		return position
-		
-def getWidth():
-	return width
+def callback(value):
+	pass
 
 def sideBySide(window, frame, frame2):
 	image = None
