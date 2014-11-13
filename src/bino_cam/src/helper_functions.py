@@ -6,17 +6,8 @@ import cv2
 width = 0 
 height = 0
 
-	
-def getCamera(cam, number):
-	if (cam == None) or (cam.isOpened() == False):
-		return cv2.VideoCapture(number)
-		
-def getFrame(cam):
-	try:
-		ret, frame = cam.read()
-		return frame
-	except:
-		return None
+def getFrames(cams):
+	return (__getFrame(cams[0]), __getFrame(cams[1]))
 
 def getDistance(window, taskbarName):
 	position = cv2.getTrackbarPos(taskbarName, window)
@@ -38,35 +29,45 @@ def disableAutoFocus():
 def setFocus(cam, focus):
 	os.system('v4l2-ctl -d '+ str(cam) +' -c focus_absolute=' + str(focus))
 	
-def setCameraResolutions(cam, cam2, w, h):
-	if(cam != None and cam.isOpened()):
-		__setCameraResolution(cam, w, h)
-	if(cam2 != None and cam2.isOpened()):
-		__setCameraResolution(cam2, w, h)
+def setCameraResolutions(cams, w, h):
+	if(__cameraValid(cams[0])):
+		__setCameraResolution(cams[0], w, h)
+	if(__cameraValid(cams[1])):
+		__setCameraResolution(cams[1], w, h)
 
-def setCameraResolutions16x9(cam, cam2, h):
+def setCameraResolutions16x9(cams, h):
 	w = 16 * (h/9)
-	if(cam != None):
-		__setCameraResolution(cam, w, h)
-	if(cam2 != None):
-		__setCameraResolution(cam2, w, h)
+	if(__cameraValid(cams[0])):
+		__setCameraResolution(cams[0], w, h)
+	if(__cameraValid(cams[1])):
+		__setCameraResolution(cams[1], w, h)
 
 def callback(value):
 	pass
 
-def sideBySide(frame, frame2):
+def sideBySide(frames):
 	image = None
-	imagePart1 = __returnValidImage(frame)
-	imagePart2 = __returnValidImage(frame2)
+	imagePart1 = __returnValidImage(frames[0])
+	imagePart2 = __returnValidImage(frames[1])
 	image = np.hstack((imagePart1, imagePart2))
 	return image
 
-def redGreen(distance, frame, frame2):
+def redGreen(distance, frames):
 	image = None
-	imagePart1 = __getRedImage(frame)
-	imagePart2 = __getGreenBlueImage(frame2)
+	imagePart1 = __getRedImage(frames[0])
+	imagePart2 = __getGreenBlueImage(frames[1])
 	image = __combineImages(distance, imagePart1, imagePart2)
 	return image
+	
+def __getFrame(cam):
+	try:
+		ret, frame = cam.read()
+		return frame
+	except:
+		return None
+
+def __cameraValid(cam):
+	return cam != None and cam.isOpened()
 
 def __setCameraResolution(cam, w, h):
 	global width, height 
