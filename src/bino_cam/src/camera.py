@@ -24,10 +24,6 @@ while(True):
 	frame = None
 	frame2 = None
 	
-	## Will allow for plug an play of camera, however slows capture
-	# cam0 = getCamera(cam0, 0)
-	# cam1 = getCamera(cam1, 1)
-	
 	# Capture frame-by-frame
 	frame = getFrame(cam0)
 	frame2 = getFrame(cam1)
