@@ -15,7 +15,10 @@ def getDistance(window, taskbarName):
 		return 0
 	else:
 		return position
-		
+
+def getHeight():
+	return height
+	
 def getWidth():
 	return width
 		

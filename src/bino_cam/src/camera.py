@@ -1,44 +1,125 @@
 import cv2
 from helper_functions import *
-
-
-windowName = "Binocular vision"
-taskbarName = "Display mode"
+import wx
+# import wx.lib.scrolledpanel
 
 displayOptions = ["Side by side", "Red-Green"]
 
-distanceTaskbar = "Distance"
+class MainWindow(wx.Frame):
+	def __init__(self, parent, title):
+		self.Cams = (cv2.VideoCapture(0), cv2.VideoCapture(1))
+		setCameraResolutions16x9(self.Cams, 720)
+		
+		wx.Frame.__init__(self, parent, title=title)
+		
+		self.panel = wx.Panel(self, wx.ID_ANY)
+		
+		self.combo = wx.ComboBox(self.panel,
+							  value=displayOptions[0], 
+							  size=wx.DefaultSize,
+							  choices=displayOptions,
+							  style=wx.CB_READONLY)
+		self.combo.Bind(wx.EVT_COMBOBOX, self.OnSelect)
+		
+		self.sld = wx.Slider(self.panel, size=(getWidth(), -1), minValue=0, maxValue=getWidth())
+		self.sld.Bind(wx.EVT_SCROLL, self.OnSliderChanged)
+		self.sld.Show(False)
+		
+		self.videoFeed = ShowCapture(self.panel, self.Cams)
+		
+		mainSizer = wx.BoxSizer(wx.VERTICAL)
+		
+		mainSizer.Add(self.combo)
+		mainSizer.Add(self.sld)
+		mainSizer.Add(self.videoFeed)
+		
+		self.panel.SetAutoLayout(True)
+		self.panel.SetSizer(mainSizer)
+		self.panel.Layout()		
+		
+		# Setting up the menu.
+		filemenu= wx.Menu()
+		
+		# wx.ID_ABOUT and wx.ID_EXIT are standard ids provided by wxWidgets.
+		menuAbout = filemenu.Append(wx.ID_ABOUT, "&About"," Information about this program")
+		menuExit = filemenu.Append(wx.ID_EXIT,"E&xit"," Terminate the program")
 
-cv2.namedWindow(windowName)
-cv2.createTrackbar(taskbarName, windowName, 0, len(displayOptions)-1, callback )	
+		# Creating the menubar.
+		menuBar = wx.MenuBar()
+		menuBar.Append(filemenu,"&File") # Adding the "filemenu" to the MenuBar
+		self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
 
-# disableAutoFocus()
+		# Set events.
+		self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
+		self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
+		
+		self.Show(True)
+		
 
-cams = (cv2.VideoCapture(0), cv2.VideoCapture(1))
+	def OnAbout(self,e):
+		# A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
+		dlg = wx.MessageDialog( self, "TO DO", "About Binocular Algorithm Example", wx.OK)
+		dlg.ShowModal() # Show it
+		dlg.Destroy() # finally destroy it when finished.
 
-setCameraResolutions16x9(cams, 720)
-
-while(True):
-	image = None
+	def OnExit(self,e):
+		self.Cams[0].release()
+		self.Cams[1].release()
+		self.Close(True)  # Close the frame.
 	
-	# Capture frame-by-frame
-	frames = getFrames(cams)
+	def OnSelect(self, event):
+		# print "You selected: " + self.combo.GetStringSelection()
+		self.sld.Show(self.combo.GetCurrentSelection()==1)
+		self.videoFeed.mode = self.combo.GetStringSelection()
+		self.panel.Layout()
 	
-	choice = cv2.getTrackbarPos(taskbarName, windowName)
-	
-	# Display the resulting frame
-	if(choice==0):
-		image = sideBySide(frames)
-	elif(choice==1):
-		cv2.createTrackbar(distanceTaskbar, windowName, getDistance(windowName, distanceTaskbar), getWidth(), callback)
-		image = redGreen(getDistance(windowName, distanceTaskbar), frames)
-	
-	cv2.imshow(windowName, image)
-	
-	if cv2.waitKey(1) & 0xFF == ord('q'):
-		break
+	def OnSliderChanged(self, event):
+		# print "Slider value: " + str(self.sld.GetValue())
+		self.videoFeed.distance = self.sld.GetValue()
+		
 
-# When everything done, release the capture
-cams[0].release()
-cams[1].release()
-cv2.destroyAllWindows()
+class ShowCapture(wx.Panel):
+	def __init__(self, parent, cams, fps=30):
+		wx.Panel.__init__(self, parent)
+
+		self.Cams = cams
+		self.mode = displayOptions[0]
+		self.distance = 0
+		image = sideBySide(getFrames(cams))
+
+		height, width = image.shape[:2]
+		
+		parent.SetSize((width, height))
+		self.SetSize((width, height))
+
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		
+		self.bmp = wx.BitmapFromBuffer(width, height, image)
+
+		self.timer = wx.Timer(self)
+		self.timer.Start(1000./fps)
+
+		self.Bind(wx.EVT_PAINT, self.OnPaint)
+		self.Bind(wx.EVT_TIMER, self.NextFrame)
+
+
+	def OnPaint(self, evt):
+		dc = wx.BufferedPaintDC(self)
+		dc.DrawBitmap(self.bmp, 0, 0)
+
+	def NextFrame(self, event):
+		if(self.mode == displayOptions[0]):
+			image = sideBySide(getFrames(self.Cams))
+		elif(self.mode == displayOptions[1]):
+			image = redGreen(self.distance, getFrames(self.Cams))
+		
+		height, width = image.shape[:2]
+		self.SetSize((width, height))
+		
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		self.bmp = wx.BitmapFromBuffer(width, height, image)
+		self.Refresh()
+
+app = wx.App(False)
+frame = MainWindow(None, "Binocular Algorithm Example")
+app.MainLoop()
