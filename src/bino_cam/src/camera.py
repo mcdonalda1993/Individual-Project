@@ -98,6 +98,7 @@ class ShowCapture(wx.Panel):
 		self.timer = wx.Timer(self)
 		self.timer.Start(1000./fps)
 
+		self.SetDoubleBuffered(True)
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_TIMER, self.NextFrame)
 
