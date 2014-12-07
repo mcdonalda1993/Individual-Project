@@ -91,10 +91,9 @@ class ShowCapture(wx.Panel):
 		
 		parent.SetSize((width, height))
 		self.SetSize((width, height))
-
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		
-		self.bmp = wx.BitmapFromBuffer(width, height, image)
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		self.image = wx.ImageFromData(width, height, image)
 
 		self.timer = wx.Timer(self)
 		self.timer.Start(1000./fps)
@@ -105,7 +104,8 @@ class ShowCapture(wx.Panel):
 
 	def OnPaint(self, evt):
 		dc = wx.BufferedPaintDC(self)
-		dc.DrawBitmap(self.bmp, 0, 0)
+		if(dc.IsOk() and dc.CanDrawBitmap()):
+			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
 
 	def NextFrame(self, event):
 		if(self.mode == displayOptions[0]):
@@ -117,7 +117,7 @@ class ShowCapture(wx.Panel):
 		self.SetSize((width, height))
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		self.bmp = wx.BitmapFromBuffer(width, height, image)
+		self.image = wx.ImageFromData(width, height, image)
 		self.Refresh()
 
 app = wx.App(False)
