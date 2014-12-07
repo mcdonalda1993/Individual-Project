@@ -1,7 +1,7 @@
 import cv2
 from helper_functions import *
 import wx
-# import wx.lib.scrolledpanel
+import wx.lib.scrolledpanel
 
 displayOptions = ["Side by side", "Red-Green"]
 
@@ -12,7 +12,8 @@ class MainWindow(wx.Frame):
 		
 		wx.Frame.__init__(self, parent, title=title)
 		
-		self.panel = wx.Panel(self, wx.ID_ANY)
+		self.panel = wx.lib.scrolledpanel.ScrolledPanel(self, wx.ID_ANY)
+		self.panel.SetupScrolling()
 		
 		self.combo = wx.ComboBox(self.panel,
 							  value=displayOptions[0], 
@@ -82,14 +83,14 @@ class ShowCapture(wx.Panel):
 	def __init__(self, parent, cams, fps=30):
 		wx.Panel.__init__(self, parent)
 
+		self.parent = parent
 		self.Cams = cams
 		self.mode = displayOptions[0]
 		self.distance = 0
 		image = sideBySide(getFrames(cams))
 
 		height, width = image.shape[:2]
-		
-		parent.SetSize((width, height))
+		self.parent.SetVirtualSize((width, height))
 		self.SetSize((width, height))
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
