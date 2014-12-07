@@ -90,7 +90,7 @@ class ShowCapture(wx.Panel):
 		image = sideBySide(getFrames(cams))
 
 		height, width = image.shape[:2]
-		self.parent.SetVirtualSize((width, height))
+		self.parent.FitInside()
 		self.SetSize((width, height))
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
