@@ -73,6 +73,7 @@ class MainWindow(wx.Frame):
 		self.sld.Show(self.combo.GetCurrentSelection()==1)
 		self.videoFeed.mode = self.combo.GetStringSelection()
 		self.panel.Layout()
+		self.Refresh()
 	
 	def OnSliderChanged(self, event):
 		# print "Slider value: " + str(self.sld.GetValue())
