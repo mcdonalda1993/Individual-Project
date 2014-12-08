@@ -3,8 +3,8 @@ import os
 import numpy as np
 import cv2
 
-width = 0 
-height = 0
+width = 1280/2 
+height = 720
 
 def getFrames(cams):
 	return (__getFrame(cams[0]), __getFrame(cams[1]))
