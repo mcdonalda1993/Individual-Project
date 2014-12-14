@@ -3,8 +3,8 @@ import os
 import numpy as np
 import cv2
 
-width = 1280/2 
-height = 720
+__width = 1280/2 
+__height = 720
 
 def getFrames(cams):
 	return (__getFrame(cams[0]), __getFrame(cams[1]))
@@ -17,10 +17,10 @@ def getDistance(window, taskbarName):
 		return position
 
 def getHeight():
-	return height
+	return __height
 	
 def getWidth():
-	return width
+	return __width
 		
 def disableAutoFocus():
 	## If that doesn't work try, sudo apt-get install v4l-utils
@@ -73,34 +73,34 @@ def __cameraValid(cam):
 	return cam != None and cam.isOpened()
 
 def __setCameraResolution(cam, w, h):
-	global width, height 
+	global __width, __height 
 	cam.set(3, w)
 	cam.set(4, h)
-	width = int(cam.get(3))
-	height = int(cam.get(4))
+	__width = int(cam.get(3))
+	__height = int(cam.get(4))
 
 def __returnValidImage(image):
 	if image != None:
 		return image
 	else:
-		blank_image = np.zeros((height, width, 3), np.uint8)
+		blank_image = np.zeros((__height, __width, 3), np.uint8)
 		return blank_image
 
 def __getRedImage(image=None): 
-	red = np.zeros((height, width, 3), np.uint8)
+	red = np.zeros((__height, __width, 3), np.uint8)
 	if image != None:
 		red[:,:,2] = image[:,:,2]	#(B, G, R)
 	return red
 	
 def __getGreenBlueImage(image=None): 
-	greenBlue = np.zeros((height, width, 3), np.uint8)
+	greenBlue = np.zeros((__height, __width, 3), np.uint8)
 	if image != None:
 		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
 	return  greenBlue
 
 def __combineImages(distance, image1, image2):
-	totalWidth = width + distance
-	image = np.zeros((height, totalWidth, 3), np.uint8)
-	image[:, :width, 2] = image1[:, :, 2]
+	totalWidth = __width + distance
+	image = np.zeros((__height, totalWidth, 3), np.uint8)
+	image[:, :__width, 2] = image1[:, :, 2]
 	image[:, distance:, :2] = image2[:, :, :2]
 	return image
