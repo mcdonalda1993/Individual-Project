@@ -1,0 +1,69 @@
+import cv2
+import wx
+import abc
+from helper_functions import getFrames, sideBySide, redGreen
+
+class VideoFeed(wx.Panel):
+	
+	__metaclass__ = abc.ABCMeta
+	
+	def __init__(self, parent, cams, fps=30):
+		wx.Panel.__init__(self, parent)
+
+		self.parent = parent
+		self.Cams = cams
+		image = self.GetImage()
+
+		height, width = image.shape[:2]
+		self.parent.FitInside()
+		self.SetSize((width, height))
+		
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		self.image = wx.ImageFromData(width, height, image)
+
+		self.timer = wx.Timer(self)
+		self.timer.Start(1000./fps)
+
+		self.SetDoubleBuffered(True)
+		self.Bind(wx.EVT_PAINT, self.OnPaint)
+		self.Bind(wx.EVT_TIMER, self.NextFrame)
+
+
+	def OnPaint(self, evt):
+		dc = wx.BufferedPaintDC(self)
+		if(dc.IsOk() and dc.CanDrawBitmap()):
+			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
+
+	def NextFrame(self, event):
+		image = self.GetImage()
+		
+		height, width = image.shape[:2]
+		self.SetSize((width, height))
+		
+		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		self.image = wx.ImageFromData(width, height, image)
+		self.Refresh()
+	
+	def Show(self, show):
+		if(show):
+			self.timer.Start()
+		else:
+			self.timer.Stop()
+		super(VideoFeed, self).Show(show)
+	
+	@abc.abstractmethod
+	def GetImage(self):
+		## Returns the type of image the feed is supposed to represent
+		return
+
+class SideBySide(VideoFeed):
+	
+	def GetImage(self):
+		return sideBySide(getFrames(self.Cams))
+
+class RedGreen(VideoFeed):
+	
+	distance = 0
+	
+	def GetImage(self):
+		return redGreen(self.distance, getFrames(self.Cams))

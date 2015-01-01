@@ -1,7 +1,8 @@
 import cv2
-from helper_functions import *
 import wx
 import wx.lib.scrolledpanel
+from helper_functions import getWidth, setCameraResolutions16x9
+from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green"]
 
@@ -26,13 +27,16 @@ class MainWindow(wx.Frame):
 		self.sld.Bind(wx.EVT_SCROLL, self.OnSliderChanged)
 		self.sld.Show(False)
 		
-		self.videoFeed = ShowCapture(self.panel, self.Cams)
+		self.sideBySide = SideBySide(self.panel, self.Cams)
+		self.redGreen = RedGreen(self.panel, self.Cams)
+		self.redGreen.Show(False)
 		
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		
 		mainSizer.Add(self.combo)
 		mainSizer.Add(self.sld)
-		mainSizer.Add(self.videoFeed)
+		mainSizer.Add(self.sideBySide)
+		mainSizer.Add(self.redGreen)
 		
 		self.panel.SetAutoLayout(True)
 		self.panel.SetSizer(mainSizer)
@@ -69,59 +73,19 @@ class MainWindow(wx.Frame):
 		self.Close(True)  # Close the frame.
 	
 	def OnSelect(self, event):
-		# print "You selected: " + self.combo.GetStringSelection()
-		self.sld.Show(self.combo.GetCurrentSelection()==1)
-		self.videoFeed.mode = self.combo.GetStringSelection()
+		
+		self.sideBySide.Show(self.combo.GetCurrentSelection() == 0)
+		
+		self.redGreen.Show(self.combo.GetCurrentSelection() == 1)
+		# Shows the additional slider control for RedGreen feed if it is selected
+		self.sld.Show(self.combo.GetCurrentSelection() == 1)
+
 		self.panel.Layout()
 		self.Refresh()
 	
 	def OnSliderChanged(self, event):
 		# print "Slider value: " + str(self.sld.GetValue())
-		self.videoFeed.distance = self.sld.GetValue()
-		
-
-class ShowCapture(wx.Panel):
-	def __init__(self, parent, cams, fps=30):
-		wx.Panel.__init__(self, parent)
-
-		self.parent = parent
-		self.Cams = cams
-		self.mode = displayOptions[0]
-		self.distance = 0
-		image = sideBySide(getFrames(cams))
-
-		height, width = image.shape[:2]
-		self.parent.FitInside()
-		self.SetSize((width, height))
-		
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		self.image = wx.ImageFromData(width, height, image)
-
-		self.timer = wx.Timer(self)
-		self.timer.Start(1000./fps)
-
-		self.SetDoubleBuffered(True)
-		self.Bind(wx.EVT_PAINT, self.OnPaint)
-		self.Bind(wx.EVT_TIMER, self.NextFrame)
-
-
-	def OnPaint(self, evt):
-		dc = wx.BufferedPaintDC(self)
-		if(dc.IsOk() and dc.CanDrawBitmap()):
-			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
-
-	def NextFrame(self, event):
-		if(self.mode == displayOptions[0]):
-			image = sideBySide(getFrames(self.Cams))
-		elif(self.mode == displayOptions[1]):
-			image = redGreen(self.distance, getFrames(self.Cams))
-		
-		height, width = image.shape[:2]
-		self.SetSize((width, height))
-		
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		self.image = wx.ImageFromData(width, height, image)
-		self.Refresh()
+		self.redGreen.distance = self.sld.GetValue()
 
 app = wx.App(False)
 frame = MainWindow(None, "Binocular Algorithm Example")
