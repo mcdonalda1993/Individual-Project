@@ -7,7 +7,14 @@ __width = 1280/2
 __height = 720
 
 def getFrames(cams):
-	return (__getFrame(cams[0]), __getFrame(cams[1]))
+	return (getFrame(cams[0]), getFrame(cams[1]))
+
+def getFrame(cam):
+	try:
+		ret, frame = cam.read()
+		return frame
+	except:
+		return None
 
 def getDistance(window, taskbarName):
 	position = cv2.getTrackbarPos(taskbarName, window)
@@ -50,8 +57,8 @@ def callback(value):
 
 def sideBySide(frames):
 	image = None
-	imagePart1 = __returnValidImage(frames[0])
-	imagePart2 = __returnValidImage(frames[1])
+	imagePart1 = returnValidImage(frames[0])
+	imagePart2 = returnValidImage(frames[1])
 	image = np.hstack((imagePart1, imagePart2))
 	return image
 
@@ -61,13 +68,13 @@ def redGreen(distance, frames):
 	imagePart2 = __getGreenBlueImage(frames[1])
 	image = __combineImages(distance, imagePart1, imagePart2)
 	return image
-	
-def __getFrame(cam):
-	try:
-		ret, frame = cam.read()
-		return frame
-	except:
-		return None
+
+def returnValidImage(image):
+	if image != None:
+		return image
+	else:
+		blank_image = np.zeros((__height, __width, 3), np.uint8)
+		return blank_image
 
 def __cameraValid(cam):
 	return cam != None and cam.isOpened()
@@ -78,13 +85,6 @@ def __setCameraResolution(cam, w, h):
 	cam.set(4, h)
 	__width = int(cam.get(3))
 	__height = int(cam.get(4))
-
-def __returnValidImage(image):
-	if image != None:
-		return image
-	else:
-		blank_image = np.zeros((__height, __width, 3), np.uint8)
-		return blank_image
 
 def __getRedImage(image=None): 
 	red = np.zeros((__height, __width, 3), np.uint8)

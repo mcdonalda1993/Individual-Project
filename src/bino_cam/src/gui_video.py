@@ -1,7 +1,9 @@
 import cv2
+import numpy as np
 import wx
+import wx.lib.newevent
 import abc
-from helper_functions import getFrames, sideBySide, redGreen
+from helper_functions import getFrames, getFrame, sideBySide, redGreen, returnValidImage
 
 class VideoFeed(wx.Panel):
 	
@@ -15,8 +17,8 @@ class VideoFeed(wx.Panel):
 		image = self.GetImage()
 
 		height, width = image.shape[:2]
-		self.parent.FitInside()
 		self.SetSize((width, height))
+		self.parent.FitInside()
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		self.image = wx.ImageFromData(width, height, image)
@@ -67,3 +69,51 @@ class RedGreen(VideoFeed):
 	
 	def GetImage(self):
 		return redGreen(self.distance, getFrames(self.Cams))
+
+class Calibration(VideoFeed):
+	CornerFound, EVT_CORNER_FOUND = wx.lib.newevent.NewEvent()
+	
+	def __init__(self, parent, cams, fps=30):
+		
+		self.steps = 0
+		
+		# termination criteria
+		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+		self.patternSize = (7,6)
+
+		# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+		self.objp = np.zeros((6*7,3), np.float32)
+		self.objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+
+		# Arrays to store object points and image points from all the images.
+		self.objPoints = [] # 3d point in real world space
+		self.imgPoints = [] # 2d points in image plane.
+		
+		super(Calibration, self).__init__(parent, cams, fps)
+	
+	def GetImage(self):
+		image = returnValidImage(getFrame(self.Cams))
+		
+		ret = False
+		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+		
+		# Find the chess board corners
+		ret, corners = cv2.findChessboardCorners(gray, self.patternSize, None)
+
+		# If found, add object points, image points (after refining them)
+		
+		if ret == True:
+			self.steps += 1
+			
+			evt = self.CornerFound(step=self.steps)
+			wx.PostEvent(self, evt)
+			
+			self.objPoints.append(self.objp)
+
+			cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), self.criteria)
+			self.imgPoints.append(corners)
+
+			# Draw and display the corners
+			cv2.drawChessboardCorners(image, self.patternSize, corners, ret)
+		
+		return image
