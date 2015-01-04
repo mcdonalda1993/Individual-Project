@@ -52,9 +52,6 @@ def setCameraResolutions16x9(cams, h):
 	if(__cameraValid(cams[1])):
 		__setCameraResolution(cams[1], w, h)
 
-def callback(value):
-	pass
-
 def sideBySide(frames):
 	image = None
 	imagePart1 = returnValidImage(frames[0])
