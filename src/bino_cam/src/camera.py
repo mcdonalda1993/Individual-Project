@@ -8,9 +8,9 @@ from gui_video import *
 displayOptions = ["Side by side", "Red-Green"]
 
 class MainWindow(wx.Frame):
-	def __init__(self, parent, title, pool):
+	def __init__(self, parent, title, processPool):
 				
-		self.pool = pool
+		self.pool = processPool
 		
 		self.Cams = (cv2.VideoCapture(0), cv2.VideoCapture(1))
 		setCameraResolutions16x9(self.Cams, 720)
@@ -170,7 +170,7 @@ class MainWindow(wx.Frame):
 			pass
 
 if __name__ == '__main__':
-	pool = Pool()
+	processPool = Pool()
 	app = wx.App(False)
-	frame = MainWindow(None, "Binocular Algorithm Example", pool)
+	frame = MainWindow(None, "Binocular Algorithm Example", processPool)
 	app.MainLoop()
