@@ -73,8 +73,12 @@ class RedGreen(VideoFeed):
 class Calibration(VideoFeed):
 	CornerFound, EVT_CORNER_FOUND = wx.lib.newevent.NewEvent()
 	
-	def __init__(self, parent, cams, fps=30):
+	def __init__(self, parent, cams, pool, fps=30, tolerance=3):
 		
+		self.fps = fps
+		# tolerance is how long the calibration should wait for cv2.findChessboardCorners
+		# Larger tolerance means for more laggy video stream but easier to find corners.
+		self.tolerance = tolerance
 		self.steps = 0
 		
 		# termination criteria
@@ -89,6 +93,8 @@ class Calibration(VideoFeed):
 		self.objPoints = [] # 3d point in real world space
 		self.imgPoints = [] # 2d points in image plane.
 		
+		self.pool = pool
+		
 		super(Calibration, self).__init__(parent, cams, fps)
 	
 	def GetImage(self):
@@ -98,7 +104,11 @@ class Calibration(VideoFeed):
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		
 		# Find the chess board corners
-		ret, corners = cv2.findChessboardCorners(gray, self.patternSize, None)
+		result = self.pool.apply_async(cv2.findChessboardCorners, (gray, self.patternSize, None))
+		try:
+			ret, corners = result.get(timeout=self.tolerance/float(self.fps))
+		except:
+			pass
 
 		# If found, add object points, image points (after refining them)
 		

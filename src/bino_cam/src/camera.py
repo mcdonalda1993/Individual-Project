@@ -1,13 +1,17 @@
 import cv2
 import wx
 import wx.lib.scrolledpanel
+from multiprocessing import Pool
 from helper_functions import getWidth, setCameraResolutions16x9
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green"]
 
 class MainWindow(wx.Frame):
-	def __init__(self, parent, title):
+	def __init__(self, parent, title, pool):
+				
+		self.pool = pool
+		
 		self.Cams = (cv2.VideoCapture(0), cv2.VideoCapture(1))
 		setCameraResolutions16x9(self.Cams, 720)
 		
@@ -43,9 +47,7 @@ class MainWindow(wx.Frame):
 		# Setup views. Non default ones are hidden.
 		self.sideBySide = SideBySide(self.panel, self.Cams)
 		self.redGreen = RedGreen(self.panel, self.Cams)
-		self.calibrationFeed = Calibration(self.panel, self.Cams[0]) # Left calibration used as a default value
 		self.redGreen.Show(False)
-		self.calibrationFeed.Show(False)
 		
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		
@@ -55,7 +57,6 @@ class MainWindow(wx.Frame):
 		mainSizer.Add(self.steps)
 		mainSizer.Add(self.sideBySide)
 		mainSizer.Add(self.redGreen)
-		mainSizer.Add(self.calibrationFeed)
 		
 		self.panel.SetAutoLayout(True)
 		self.panel.SetSizer(mainSizer)
@@ -126,7 +127,7 @@ class MainWindow(wx.Frame):
 		self.cancelCalibrationButton.Show(True)
 		self.steps.Show(True)
 		
-		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id])
+		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id], self.pool)
 		self.calibrationFeed.Bind(Calibration.EVT_CORNER_FOUND, self.UpdateLabel)
 		
 		mainSizer = self.panel.GetSizer()
@@ -152,6 +153,8 @@ class MainWindow(wx.Frame):
 		self.calibrationFeed.Show(False)
 		self.calibrationFeed.Destroy()
 
-app = wx.App(False)
-frame = MainWindow(None, "Binocular Algorithm Example")
-app.MainLoop()
+if __name__ == '__main__':
+	pool = Pool()
+	app = wx.App(False)
+	frame = MainWindow(None, "Binocular Algorithm Example", pool)
+	app.MainLoop()
