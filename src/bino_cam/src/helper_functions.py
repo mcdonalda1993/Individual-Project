@@ -126,7 +126,7 @@ def __returnCorrectedImage(settings=None, image=None):
 	
 	ret, mtx, dist, rvecs, tvecs = settings
 	
-	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__width, __height), 1, (__width, __height))
+	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__width, __height), 0, (__width, __height))
 	
 	dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
 	
