@@ -34,6 +34,12 @@ class MainWindow(wx.Frame):
 		
 		self.cancelCalibrationButton = wx.Button(self.panel, label="Cancel Calibration")
 		self.cancelCalibrationButton.Bind(wx.EVT_BUTTON, self.CancelCalibration)
+		self.searchingToggle = wx.ToggleButton(self.panel, label="Enable Calibration")
+		self.searchingToggle.Bind(wx.EVT_TOGGLEBUTTON, self.ToggleChanged)
+		
+		calibrationSizer = wx.BoxSizer(wx.HORIZONTAL)
+		calibrationSizer.Add(self.cancelCalibrationButton)
+		calibrationSizer.Add(self.searchingToggle)
 		
 		font = wx.Font(20, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 		self.steps = wx.StaticText(self.panel)
@@ -42,6 +48,7 @@ class MainWindow(wx.Frame):
 		
 		self.sld.Show(False)
 		self.cancelCalibrationButton.Show(False)
+		self.searchingToggle.Show(False)
 		self.steps.Show(False)
 		
 		# Setup views. Non default ones are hidden.
@@ -53,7 +60,7 @@ class MainWindow(wx.Frame):
 		
 		mainSizer.Add(self.combo)
 		mainSizer.Add(self.sld)
-		mainSizer.Add(self.cancelCalibrationButton)
+		mainSizer.Add(calibrationSizer)
 		mainSizer.Add(self.steps)
 		mainSizer.Add(self.sideBySide)
 		mainSizer.Add(self.redGreen)
@@ -114,6 +121,7 @@ class MainWindow(wx.Frame):
 		dlg.Destroy() # finally destroy it when finished.
 
 	def OnExit(self, event):
+		self.CancelCalibration(None)
 		self.Cams[0].release()
 		self.Cams[1].release()
 		self.Close(True)  # Close the frame.
@@ -125,6 +133,7 @@ class MainWindow(wx.Frame):
 		self.redGreen.Show(False)
 		
 		self.cancelCalibrationButton.Show(True)
+		self.searchingToggle.Show(True)
 		self.steps.Show(True)
 		
 		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id], self.pool)
@@ -136,6 +145,9 @@ class MainWindow(wx.Frame):
 		self.panel.FitInside()
 		self.panel.Layout()
 		self.Refresh()
+		
+	def ToggleChanged(self, event):
+		self.calibrationFeed.Searching = self.searchingToggle.GetValue()
 	
 	def UpdateLabel(self, event):
 		## TODO determine when to stop calibration and save results
@@ -149,9 +161,13 @@ class MainWindow(wx.Frame):
 		self.sideBySide.Show(True)
 
 		self.cancelCalibrationButton.Show(False)
+		self.searchingToggle.Show(False)
 		self.steps.Show(False)
-		self.calibrationFeed.Show(False)
-		self.calibrationFeed.Destroy()
+		try:
+			self.calibrationFeed.Show(False)
+			self.calibrationFeed.Destroy()
+		except:
+			pass
 
 if __name__ == '__main__':
 	pool = Pool()

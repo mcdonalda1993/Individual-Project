@@ -80,6 +80,7 @@ class Calibration(VideoFeed):
 		# Larger tolerance means for more laggy video stream but easier to find corners.
 		self.tolerance = tolerance
 		self.steps = 0
+		self.Searching = False
 		
 		# termination criteria
 		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -100,30 +101,31 @@ class Calibration(VideoFeed):
 	def GetImage(self):
 		image = returnValidImage(getFrame(self.Cams))
 		
-		ret = False
-		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		
-		# Find the chess board corners
-		result = self.pool.apply_async(cv2.findChessboardCorners, (gray, self.patternSize, None))
-		try:
-			ret, corners = result.get(timeout=self.tolerance/float(self.fps))
-		except:
-			pass
-
-		# If found, add object points, image points (after refining them)
-		
-		if ret == True:
-			self.steps += 1
+		if(self.Searching):
+			ret = False
+			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 			
-			evt = self.CornerFound(step=self.steps)
-			wx.PostEvent(self, evt)
+			# Find the chess board corners
+			result = self.pool.apply_async(cv2.findChessboardCorners, (gray, self.patternSize, None))
+			try:
+				ret, corners = result.get(timeout=self.tolerance/float(self.fps))
+			except:
+				pass
+
+			# If found, add object points, image points (after refining them)
 			
-			self.objPoints.append(self.objp)
+			if ret == True:
+				self.steps += 1
+				
+				evt = self.CornerFound(step=self.steps)
+				wx.PostEvent(self, evt)
+				
+				self.objPoints.append(self.objp)
 
-			cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), self.criteria)
-			self.imgPoints.append(corners)
+				cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), self.criteria)
+				self.imgPoints.append(corners)
 
-			# Draw and display the corners
-			cv2.drawChessboardCorners(image, self.patternSize, corners, ret)
+				# Draw and display the corners
+				cv2.drawChessboardCorners(image, self.patternSize, corners, ret)
 		
 		return image
