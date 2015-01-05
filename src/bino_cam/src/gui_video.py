@@ -90,11 +90,11 @@ class Calibration(VideoFeed):
 		
 		# termination criteria
 		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-		self.patternSize = (7,6)
+		self.patternSize = (9,6)
 
 		# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-		self.objp = np.zeros((6*7,3), np.float32)
-		self.objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+		self.objp = np.zeros((self.patternSize[1]*self.patternSize[0],3), np.float32)
+		self.objp[:,:2] = np.mgrid[0:self.patternSize[0],0:self.patternSize[1]].T.reshape(-1,2)
 
 		# Arrays to store object points and image points from all the images.
 		self.objPoints = [] # 3d point in real world space
