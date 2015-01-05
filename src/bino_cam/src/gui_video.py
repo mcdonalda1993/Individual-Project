@@ -3,7 +3,7 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, sideBySide, redGreen, returnValidImage
+from helper_functions import getFrames, getFrame, sideBySide, redGreen, correctedSideBySide, returnValidImage
 
 class VideoFeed(wx.Panel):
 	
@@ -70,10 +70,15 @@ class RedGreen(VideoFeed):
 	def GetImage(self):
 		return redGreen(self.distance, getFrames(self.Cams))
 
+class CorrectedSideBySide(VideoFeed):
+	
+	def GetImage(self):
+		return correctedSideBySide(getFrames(self.Cams))
+
 class Calibration(VideoFeed):
 	CornerFound, EVT_CORNER_FOUND = wx.lib.newevent.NewEvent()
 	
-	def __init__(self, parent, cams, pool, fps=30, tolerance=3):
+	def __init__(self, parent, cams, pool, Id, fps=30, tolerance=10):
 		
 		self.fps = fps
 		# tolerance is how long the calibration should wait for cv2.findChessboardCorners
@@ -81,6 +86,7 @@ class Calibration(VideoFeed):
 		self.tolerance = tolerance
 		self.steps = 0
 		self.Searching = False
+		self.Left = (Id == 0)
 		
 		# termination criteria
 		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)

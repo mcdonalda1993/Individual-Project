@@ -6,6 +6,9 @@ import cv2
 __width = 1280/2 
 __height = 720
 
+__leftCalibration = None
+__rightCalibration = None
+
 def getFrames(cams):
 	return (getFrame(cams[0]), getFrame(cams[1]))
 
@@ -66,12 +69,27 @@ def redGreen(distance, frames):
 	image = __combineImages(distance, imagePart1, imagePart2)
 	return image
 
+def correctedSideBySide(frames):
+	image = None
+	imagePart1 = __returnCorrectedImage(__leftCalibration, frames[0])
+	imagePart2 = __returnCorrectedImage(__rightCalibration, frames[1])
+	image = np.hstack((imagePart1, imagePart2))
+	return image	
+
 def returnValidImage(image):
 	if image != None:
 		return image
 	else:
 		blank_image = np.zeros((__height, __width, 3), np.uint8)
 		return blank_image
+
+def calibrateLeft(objpoints, imgpoints):
+	global __leftCalibration
+	__leftCalibration = __calibrate(objpoints, imgpoints)
+
+def calibrateRight(objpoints, imgpoints):
+	global __rightCalibration
+	__rightCalibration = __calibrate(objpoints, imgpoints)
 
 def __cameraValid(cam):
 	return cam != None and cam.isOpened()
@@ -101,3 +119,18 @@ def __combineImages(distance, image1, image2):
 	image[:, :__width, 2] = image1[:, :, 2]
 	image[:, distance:, :2] = image2[:, :, :2]
 	return image
+
+def __returnCorrectedImage(settings=None, image=None):
+	if(settings==None):
+		return returnValidImage(None)
+	
+	ret, mtx, dist, rvecs, tvecs = settings
+	
+	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__width, __height), 1, (__width, __height))
+	
+	dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
+	
+	return returnValidImage(image)
+
+def __calibrate(objpoints, imgpoints):
+	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
