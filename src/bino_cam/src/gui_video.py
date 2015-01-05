@@ -31,7 +31,7 @@ class VideoFeed(wx.Panel):
 		self.Bind(wx.EVT_TIMER, self.NextFrame)
 
 
-	def OnPaint(self, evt):
+	def OnPaint(self, event):
 		dc = wx.BufferedPaintDC(self)
 		if(dc.IsOk() and dc.CanDrawBitmap()):
 			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
