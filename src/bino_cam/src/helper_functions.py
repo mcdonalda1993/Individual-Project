@@ -121,7 +121,7 @@ def __combineImages(distance, image1, image2):
 	return image
 
 def __returnCorrectedImage(settings=None, image=None):
-	if(settings==None):
+	if(settings==None or image==None):
 		return returnValidImage(None)
 	
 	ret, mtx, dist, rvecs, tvecs = settings

@@ -54,8 +54,8 @@ class MainWindow(wx.Frame):
 		# Setup views. Non default ones are hidden.
 		self.sideBySide = SideBySide(self.panel, self.Cams)
 		self.redGreen = RedGreen(self.panel, self.Cams)
-		self.correctedSideBySide = CorrectedSideBySide(self.panel, self.Cams)
 		self.redGreen.Show(False)
+		self.correctedSideBySide = CorrectedSideBySide(self.panel, self.Cams)
 		self.correctedSideBySide.Show(False)
 		
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -79,8 +79,8 @@ class MainWindow(wx.Frame):
 		menuExit = filemenu.Append(wx.ID_EXIT,"&Exit"," Terminate the program")
 		
 		calibration = wx.Menu()
-		calibrate0 = calibration.Append(0, "Calibrate left camera (&0) ")
-		calibrate1 = calibration.Append(1, "Calibrate right camera (&1) ")
+		calibrate0 = calibration.Append(1, "Calibrate left camera (&0) ")
+		calibrate1 = calibration.Append(2, "Calibrate right camera (&1) ")
 		
 		# Creating the menubar.
 		menuBar = wx.MenuBar()
@@ -142,7 +142,7 @@ class MainWindow(wx.Frame):
 		self.searchingToggle.Show(True)
 		self.steps.Show(True)
 		
-		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id], self.pool, event.Id)
+		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id-1], self.pool, event.Id-1)
 		self.calibrationFeed.Bind(Calibration.EVT_CORNER_FOUND, self.UpdateLabel)
 		
 		self.searchingToggle.SetValue(False)
