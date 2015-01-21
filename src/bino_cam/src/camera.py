@@ -130,6 +130,7 @@ class MainWindow(wx.Frame):
 		self.Cams[0].release()
 		self.Cams[1].release()
 		self.Close(True)  # Close the frame.
+		wx.GetApp().ExitMainLoop()
 	
 	def StartCalibration(self, event):
 		self.combo.Show(False)
