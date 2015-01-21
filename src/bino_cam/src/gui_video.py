@@ -87,7 +87,7 @@ class Calibration(VideoFeed):
 		# Larger tolerance means for more laggy video stream but easier to find corners.
 		self.tolerance = tolerance
 		self.steps = 0
-		self.Searching = False
+		self.searching = False
 		self.Left = (Id == 0)
 		
 		# termination criteria
@@ -109,7 +109,7 @@ class Calibration(VideoFeed):
 	def GetImage(self):
 		image = returnValidImage(getFrame(self.Cams))
 		
-		if(self.Searching):
+		if(self.searching):
 			ret = False
 			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 			
@@ -124,6 +124,7 @@ class Calibration(VideoFeed):
 			
 			if ret == True:
 				self.steps += 1
+				self.searching = False
 				
 				evt = self.CornerFound(step=self.steps)
 				wx.PostEvent(self, evt)

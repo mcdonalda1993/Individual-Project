@@ -157,15 +157,16 @@ class MainWindow(wx.Frame):
 		self.Refresh()
 		
 	def ToggleChanged(self, event):
-		self.calibrationFeed.Searching = self.searchingToggle.GetValue()
+		self.calibrationFeed.searching = self.searchingToggle.GetValue()
 	
 	def UpdateLabel(self, event):
 
 		step = event.step
+		self.searchingToggle.SetValue(self.calibrationFeed.searching)
 
 		self.steps.SetLabel("Captured Corners: " + str(step))
-		if(step > 10):
-			self.calibrationFeed.Searching = False
+		if(step >= 10):
+			self.calibrationFeed.searching = False
 			if(self.calibrationFeed.Left):
 				calibrateLeft(self.calibrationFeed.objPoints, self.calibrationFeed.imgPoints)
 			else:
