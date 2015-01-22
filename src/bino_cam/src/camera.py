@@ -158,11 +158,14 @@ class MainWindow(wx.Frame):
 		
 	def ToggleChanged(self, event):
 		self.calibrationFeed.searching = self.searchingToggle.GetValue()
+		self.__UpdateCalibrationButtonBackground()
 	
 	def UpdateLabel(self, event):
 
 		step = event.step
 		self.searchingToggle.SetValue(self.calibrationFeed.searching)
+		
+		self.__UpdateCalibrationButtonBackground()
 
 		self.steps.SetLabel("Captured Corners: " + str(step))
 		if(step >= 10):
@@ -187,6 +190,12 @@ class MainWindow(wx.Frame):
 			self.calibrationFeed.Destroy()
 		except:
 			pass
+	
+	def __UpdateCalibrationButtonBackground(self):
+		if(self.calibrationFeed.searching):
+			self.searchingToggle.SetBackgroundColour("Red")
+		else:
+			self.searchingToggle.SetBackgroundColour(wx.NullColour)
 
 if __name__ == '__main__':
 	processPool = Pool()
