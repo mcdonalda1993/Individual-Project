@@ -45,6 +45,7 @@ class VideoFeed(wx.Panel):
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		self.image = wx.ImageFromData(width, height, image)
 		
+		wx.YieldIfNeeded()
 		self.Update()
 		self.Refresh()
 	
