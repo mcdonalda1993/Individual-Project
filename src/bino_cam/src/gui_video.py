@@ -3,7 +3,7 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, sideBySide, redGreen, correctedSideBySide, returnValidImage
+from helper_functions import getFrames, getFrame, getWidth, sideBySide, redGreen, correctedSideBySide, returnValidImage
 
 class VideoFeed(wx.Panel):
 	
@@ -17,11 +17,21 @@ class VideoFeed(wx.Panel):
 		image = self.GetImage()
 
 		height, width = image.shape[:2]
-		self.SetSize((width, height))
+		
 		self.parent.FitInside()
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		self.image = wx.ImageFromData(width, height, image)
+		
+		self.imageSizer = wx.BoxSizer(wx.VERTICAL)
+		self.imageSizer.Add(self.image.GetSize())
+		
+		self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+		self.mainSizer.Add(self.imageSizer)
+		
+		self.SetAutoLayout(True)
+		self.SetSizer(self.mainSizer)
+		self.Layout()
 
 		self.timer = wx.Timer(self)
 		self.timer.Start(1000./fps)
@@ -40,10 +50,12 @@ class VideoFeed(wx.Panel):
 		image = self.GetImage()
 		
 		height, width = image.shape[:2]
-		self.SetSize((width, height))
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		self.image = wx.ImageFromData(width, height, image)
+		
+		self.imageSizer.Clear()
+		self.imageSizer.Add(self.image.GetSize())
 		
 		wx.YieldIfNeeded()
 		self.Update()
@@ -70,8 +82,32 @@ class RedGreen(VideoFeed):
 	
 	distance = 0
 	
+	def __init__(self, parent, cams, fps=30):
+		
+		super(RedGreen, self).__init__(parent, cams, fps)
+		
+		self.slider = wx.Slider(self, size=(getWidth(), -1), minValue=0, maxValue=getWidth())
+		self.slider.Bind(wx.EVT_SCROLL, self.OnSliderChanged)
+		self.slider.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSliderRelease)
+		
+		self.mainSizer.Prepend(self.slider)
+		self.Layout()	
+	
 	def GetImage(self):
 		return redGreen(self.distance, getFrames(self.Cams))
+	
+	def Show(self, show):
+		self.slider.Show(show)
+		super(RedGreen, self).Show(show)
+	
+	def OnSliderChanged(self, event):
+		self.distance = self.slider.GetValue()
+	
+	def OnSliderRelease(self, event):
+		## TODO Fix scroll virtual size not updating with change in distance slider		
+		self.parent.FitInside()
+		self.parent.Layout()
+		self.Refresh()
 
 class CorrectedSideBySide(VideoFeed):
 	
@@ -81,7 +117,7 @@ class CorrectedSideBySide(VideoFeed):
 class Calibration(VideoFeed):
 	CornerFound, EVT_CORNER_FOUND = wx.lib.newevent.NewEvent()
 	
-	def __init__(self, parent, cams, pool, Id, fps=30, tolerance=10):
+	def __init__(self, parent, cams, pool, camNo, fps=30, tolerance=10):
 		
 		self.fps = fps
 		# tolerance is how long the calibration should wait for cv2.findChessboardCorners
@@ -89,7 +125,7 @@ class Calibration(VideoFeed):
 		self.tolerance = tolerance
 		self.steps = 0
 		self.searching = False
-		self.Left = (Id == 0)
+		self.Left = (camNo == 0)
 		
 		# termination criteria
 		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)

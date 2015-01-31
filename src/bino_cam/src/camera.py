@@ -2,7 +2,7 @@ import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
-from helper_functions import getWidth, setCameraResolutions16x9, calibrateLeft, calibrateRight
+from helper_functions import setCameraResolutions16x9, calibrateLeft, calibrateRight
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side"]
@@ -28,9 +28,6 @@ class MainWindow(wx.Frame):
 							  style=wx.CB_READONLY)
 		self.combo.Bind(wx.EVT_COMBOBOX, self.OnSelect)
 		
-		self.sld = wx.Slider(self.panel, size=(getWidth(), -1), minValue=0, maxValue=getWidth())
-		self.sld.Bind(wx.EVT_SCROLL, self.OnSliderChanged)
-		self.sld.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSliderRelease)
 		
 		self.cancelCalibrationButton = wx.Button(self.panel, label="Cancel Calibration")
 		self.cancelCalibrationButton.Bind(wx.EVT_BUTTON, self.CancelCalibration)
@@ -46,7 +43,6 @@ class MainWindow(wx.Frame):
 		self.steps.SetLabel("Captured Corners: 0")
 		self.steps.SetFont(font)
 		
-		self.sld.Show(False)
 		self.cancelCalibrationButton.Show(False)
 		self.searchingToggle.Show(False)
 		self.steps.Show(False)
@@ -61,7 +57,6 @@ class MainWindow(wx.Frame):
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		
 		mainSizer.Add(self.combo)
-		mainSizer.Add(self.sld)
 		mainSizer.Add(calibrationSizer)
 		mainSizer.Add(self.steps)
 		mainSizer.Add(self.sideBySide)
@@ -102,19 +97,9 @@ class MainWindow(wx.Frame):
 		
 		self.redGreen.Show(self.combo.GetCurrentSelection() == 1)
 		# Slider control is only shown for RedGreen feed
-		self.sld.Show(self.combo.GetCurrentSelection() == 1)
 		
 		self.correctedSideBySide.Show(self.combo.GetCurrentSelection() == 2)
 		
-		self.panel.FitInside()
-		self.panel.Layout()
-		self.Refresh()
-	
-	def OnSliderChanged(self, event):
-		self.redGreen.distance = self.sld.GetValue()
-	
-	def OnSliderRelease(self, event):
-		## TODO Fix scroll virtual size not updating with change in distance slider		
 		self.panel.FitInside()
 		self.panel.Layout()
 		self.Refresh()
@@ -134,7 +119,6 @@ class MainWindow(wx.Frame):
 	
 	def StartCalibration(self, event):
 		self.combo.Show(False)
-		self.sld.Show(False)
 		self.sideBySide.Show(False)
 		self.redGreen.Show(False)
 		self.correctedSideBySide.Show(False)
