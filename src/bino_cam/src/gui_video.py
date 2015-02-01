@@ -115,7 +115,7 @@ class CorrectedSideBySide(VideoFeed):
 		return correctedSideBySide(getFrames(self.Cams))
 
 class Calibration(VideoFeed):
-	CornerFound, EVT_CORNER_FOUND = wx.lib.newevent.NewEvent()
+	CalibrationEnded, EVT_CALIBRATION_ENDED = wx.lib.newevent.NewEvent()
 	
 	def __init__(self, parent, cams, pool, camNo, fps=30, tolerance=10):
 		
@@ -124,8 +124,8 @@ class Calibration(VideoFeed):
 		# Larger tolerance means for more laggy video stream but easier to find corners.
 		self.tolerance = tolerance
 		self.steps = 0
-		self.searching = False
 		self.Left = (camNo == 0)
+		self.__init = False
 		
 		# termination criteria
 		self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -142,11 +142,31 @@ class Calibration(VideoFeed):
 		self.pool = pool
 		
 		super(Calibration, self).__init__(parent, cams, fps)
+		
+		self.cancelCalibrationButton = wx.Button(self, label="Cancel Calibration")
+		self.cancelCalibrationButton.Bind(wx.EVT_BUTTON, self.CancelCalibration)
+		self.searchingToggle = wx.ToggleButton(self, label="Enable Calibration")
+		self.searchingToggle.SetValue(False)
+		self.searchingToggle.Bind(wx.EVT_TOGGLEBUTTON, self.ToggleChanged)
+		
+		calibrationSizer = wx.BoxSizer(wx.HORIZONTAL)
+		calibrationSizer.Add(self.cancelCalibrationButton)
+		calibrationSizer.Add(self.searchingToggle)
+		
+		font = wx.Font(20, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+		self.stepsLabel = wx.StaticText(self)
+		self.stepsLabel.SetLabel("Captured Corners: 0")
+		self.stepsLabel.SetFont(font)
+		
+		self.mainSizer.Prepend(self.stepsLabel)
+		self.mainSizer.Prepend(calibrationSizer)
+		self.Layout()
 	
 	def GetImage(self):
 		image = returnValidImage(getFrame(self.Cams))
 		
-		if(self.searching):
+		if(self.__init and self.searchingToggle.GetValue()):
+			
 			ret = False
 			gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 			
@@ -161,10 +181,8 @@ class Calibration(VideoFeed):
 			
 			if ret == True:
 				self.steps += 1
-				self.searching = False
 				
-				evt = self.CornerFound(step=self.steps)
-				wx.PostEvent(self, evt)
+				self.UpdateLabel()
 				
 				self.objPoints.append(self.objp)
 
@@ -174,4 +192,48 @@ class Calibration(VideoFeed):
 				# Draw and display the corners
 				cv2.drawChessboardCorners(image, self.patternSize, corners, ret)
 		
+		self.__init = True
+		
 		return image
+	
+	def ToggleChanged(self, event):
+		self.__UpdateCalibrationButtonBackground()
+	
+	def UpdateLabel(self):
+
+		step = self.steps
+		
+		self.__UpdateCalibrationButtonBackground()
+
+		self.stepsLabel.SetLabel("Captured Corners: " + str(step))
+		if(step >= 10):
+			self.searchingToggle.SetValue(False)
+			
+			if(self.Left):
+				calibrateLeft(self.objPoints, self.imgPoints)
+			else:
+				calibrateRight(self.objPoints, self.imgPoints)
+			
+			self.CancelCalibration(None)
+			self.stepsLabel.SetLabel("Captured Corners: " + str(step) + " Calibration saved")
+	
+	def CancelCalibration(self, event):
+		
+		evt = self.CalibrationEnded()
+		self.GetEventHandler().ProcessEvent(evt)
+		
+		self.cancelCalibrationButton.Show(False)
+		self.searchingToggle.Show(False)
+		self.searchingToggle.SetValue(False)
+		self.stepsLabel.Show(False)
+		try:
+			self.Show(False)
+			self.Destroy()
+		except:
+			pass
+	
+	def __UpdateCalibrationButtonBackground(self):
+		if(self.searching):
+			self.searchingToggle.SetBackgroundColour("Red")
+		else:
+			self.searchingToggle.SetBackgroundColour(wx.NullColour)

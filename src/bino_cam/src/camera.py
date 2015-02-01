@@ -29,26 +29,9 @@ class MainWindow(wx.Frame):
 		self.combo.Bind(wx.EVT_COMBOBOX, self.OnSelect)
 		
 		
-		self.cancelCalibrationButton = wx.Button(self.panel, label="Cancel Calibration")
-		self.cancelCalibrationButton.Bind(wx.EVT_BUTTON, self.CancelCalibration)
-		self.searchingToggle = wx.ToggleButton(self.panel, label="Enable Calibration")
-		self.searchingToggle.Bind(wx.EVT_TOGGLEBUTTON, self.ToggleChanged)
-		
-		calibrationSizer = wx.BoxSizer(wx.HORIZONTAL)
-		calibrationSizer.Add(self.cancelCalibrationButton)
-		calibrationSizer.Add(self.searchingToggle)
-		
-		font = wx.Font(20, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-		self.steps = wx.StaticText(self.panel)
-		self.steps.SetLabel("Captured Corners: 0")
-		self.steps.SetFont(font)
-		
-		self.cancelCalibrationButton.Show(False)
-		self.searchingToggle.Show(False)
-		self.steps.Show(False)
-		
 		# Setup views. Non default ones are hidden.
 		self.sideBySide = SideBySide(self.panel, self.Cams)
+		
 		self.redGreen = RedGreen(self.panel, self.Cams)
 		self.redGreen.Show(False)
 		self.correctedSideBySide = CorrectedSideBySide(self.panel, self.Cams)
@@ -57,8 +40,6 @@ class MainWindow(wx.Frame):
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		
 		mainSizer.Add(self.combo)
-		mainSizer.Add(calibrationSizer)
-		mainSizer.Add(self.steps)
 		mainSizer.Add(self.sideBySide)
 		mainSizer.Add(self.redGreen)
 		mainSizer.Add(self.correctedSideBySide)
@@ -111,7 +92,10 @@ class MainWindow(wx.Frame):
 		dlg.Destroy() # finally destroy it when finished.
 
 	def OnExit(self, event):
-		self.CancelCalibration(None)
+		try:
+			self.calibrationFeed.CancelCalibration(None)
+		except:
+			pass
 		self.Cams[0].release()
 		self.Cams[1].release()
 		self.Close(True)  # Close the frame.
@@ -123,15 +107,8 @@ class MainWindow(wx.Frame):
 		self.redGreen.Show(False)
 		self.correctedSideBySide.Show(False)
 		
-		self.cancelCalibrationButton.Show(True)
-		self.searchingToggle.Show(True)
-		self.steps.Show(True)
-		
 		self.calibrationFeed = Calibration(self.panel, self.Cams[event.Id-1], self.pool, event.Id-1)
-		self.calibrationFeed.Bind(Calibration.EVT_CORNER_FOUND, self.UpdateLabel)
-		
-		self.searchingToggle.SetValue(False)
-		self.steps.SetLabel("Captured Corners: 0")
+		self.calibrationFeed.Bind(Calibration.EVT_CALIBRATION_ENDED, self.EndCalibration)
 		
 		mainSizer = self.panel.GetSizer()
 		mainSizer.Add(self.calibrationFeed)
@@ -139,47 +116,11 @@ class MainWindow(wx.Frame):
 		self.panel.FitInside()
 		self.panel.Layout()
 		self.Refresh()
-		
-	def ToggleChanged(self, event):
-		self.calibrationFeed.searching = self.searchingToggle.GetValue()
-		self.__UpdateCalibrationButtonBackground()
 	
-	def UpdateLabel(self, event):
-
-		step = event.step
-		self.searchingToggle.SetValue(self.calibrationFeed.searching)
-		
-		self.__UpdateCalibrationButtonBackground()
-
-		self.steps.SetLabel("Captured Corners: " + str(step))
-		if(step >= 10):
-			self.calibrationFeed.searching = False
-			if(self.calibrationFeed.Left):
-				calibrateLeft(self.calibrationFeed.objPoints, self.calibrationFeed.imgPoints)
-			else:
-				calibrateRight(self.calibrationFeed.objPoints, self.calibrationFeed.imgPoints)
-			# self.CancelCalibration(None)
-			self.steps.SetLabel("Captured Corners: " + str(step) + " Calibration saved")
-	
-	def CancelCalibration(self, event):
+	def EndCalibration(self, event):
 		self.combo.Show(True)
 		self.combo.SetValue(displayOptions[0])
 		self.sideBySide.Show(True)
-
-		self.cancelCalibrationButton.Show(False)
-		self.searchingToggle.Show(False)
-		self.steps.Show(False)
-		try:
-			self.calibrationFeed.Show(False)
-			self.calibrationFeed.Destroy()
-		except:
-			pass
-	
-	def __UpdateCalibrationButtonBackground(self):
-		if(self.calibrationFeed.searching):
-			self.searchingToggle.SetBackgroundColour("Red")
-		else:
-			self.searchingToggle.SetBackgroundColour(wx.NullColour)
 
 if __name__ == '__main__':
 	processPool = Pool()
