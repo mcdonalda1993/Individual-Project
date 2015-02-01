@@ -2,7 +2,7 @@ import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
-from helper_functions import setCameraResolutions16x9, calibrateLeft, calibrateRight
+from helper_functions import setCameraResolutions16x9
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side"]

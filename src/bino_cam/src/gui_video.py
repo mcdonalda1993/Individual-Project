@@ -3,7 +3,7 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, getWidth, sideBySide, redGreen, correctedSideBySide, returnValidImage
+from helper_functions import getFrames, getFrame, getWidth, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight
 
 class VideoFeed(wx.Panel):
 	
@@ -23,11 +23,13 @@ class VideoFeed(wx.Panel):
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 		self.image = wx.ImageFromData(width, height, image)
 		
+		self.imagePanel = wx.Panel(self)
 		self.imageSizer = wx.BoxSizer(wx.VERTICAL)
 		self.imageSizer.Add(self.image.GetSize())
+		self.imagePanel.SetSizer(self.imageSizer)
 		
 		self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-		self.mainSizer.Add(self.imageSizer)
+		self.mainSizer.Add(self.imagePanel)
 		
 		self.SetAutoLayout(True)
 		self.SetSizer(self.mainSizer)
@@ -42,7 +44,7 @@ class VideoFeed(wx.Panel):
 
 
 	def OnPaint(self, event):
-		dc = wx.BufferedPaintDC(self)
+		dc = wx.BufferedPaintDC(self.imagePanel)
 		if(dc.IsOk() and dc.CanDrawBitmap()):
 			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
 
@@ -143,23 +145,28 @@ class Calibration(VideoFeed):
 		
 		super(Calibration, self).__init__(parent, cams, fps)
 		
-		self.cancelCalibrationButton = wx.Button(self, label="Cancel Calibration")
+		panel = wx.Panel(self)
+		panelSizer = wx.BoxSizer(wx.VERTICAL)
+		panel.SetSizer(panelSizer)
+		
+		self.cancelCalibrationButton = wx.Button(panel, label="Cancel Calibration")
 		self.cancelCalibrationButton.Bind(wx.EVT_BUTTON, self.CancelCalibration)
-		self.searchingToggle = wx.ToggleButton(self, label="Enable Calibration")
+		self.searchingToggle = wx.ToggleButton(panel, label="Enable Calibration")
 		self.searchingToggle.SetValue(False)
 		self.searchingToggle.Bind(wx.EVT_TOGGLEBUTTON, self.ToggleChanged)
 		
 		calibrationSizer = wx.BoxSizer(wx.HORIZONTAL)
-		calibrationSizer.Add(self.cancelCalibrationButton)
-		calibrationSizer.Add(self.searchingToggle)
+		calibrationSizer.Add(self.cancelCalibrationButton, flag=wx.EXPAND)
+		calibrationSizer.Add(self.searchingToggle, flag=wx.EXPAND)
 		
 		font = wx.Font(20, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-		self.stepsLabel = wx.StaticText(self)
+		self.stepsLabel = wx.StaticText(panel)
 		self.stepsLabel.SetLabel("Captured Corners: 0")
 		self.stepsLabel.SetFont(font)
 		
-		self.mainSizer.Prepend(self.stepsLabel)
-		self.mainSizer.Prepend(calibrationSizer)
+		panelSizer.Add(calibrationSizer, flag=wx.EXPAND)
+		panelSizer.Add(self.stepsLabel, flag=wx.EXPAND)
+		self.mainSizer.Prepend(panel, flag=wx.EXPAND)
 		self.Layout()
 	
 	def GetImage(self):
@@ -214,7 +221,8 @@ class Calibration(VideoFeed):
 			else:
 				calibrateRight(self.objPoints, self.imgPoints)
 			
-			self.CancelCalibration(None)
+			self.searchingToggle.SetValue(False)
+			self.__UpdateCalibrationButtonBackground()
 			self.stepsLabel.SetLabel("Captured Corners: " + str(step) + " Calibration saved")
 	
 	def CancelCalibration(self, event):
@@ -233,7 +241,7 @@ class Calibration(VideoFeed):
 			pass
 	
 	def __UpdateCalibrationButtonBackground(self):
-		if(self.searching):
+		if(self.searchingToggle.GetValue()):
 			self.searchingToggle.SetBackgroundColour("Red")
 		else:
 			self.searchingToggle.SetBackgroundColour(wx.NullColour)
