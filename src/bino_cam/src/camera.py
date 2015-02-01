@@ -92,8 +92,11 @@ class MainWindow(wx.Frame):
 		dlg.Destroy() # finally destroy it when finished.
 
 	def OnExit(self, event):
+		self.sideBySide.Show(False)
+		self.redGreen.Show(False)
+		self.correctedSideBySide.Show(False)
 		try:
-			self.calibrationFeed.CancelCalibration(None)
+			self.calibrationFeed.Show(False)
 		except:
 			pass
 		self.Cams[0].release()
