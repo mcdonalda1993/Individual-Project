@@ -234,8 +234,8 @@ class Calibration(VideoFeed):
 		self.searchingToggle.Show(False)
 		self.searchingToggle.SetValue(False)
 		self.stepsLabel.Show(False)
+		self.Show(False)
 		try:
-			self.Show(False)
 			self.Destroy()
 		except:
 			pass
