@@ -2,6 +2,8 @@
 import os
 import numpy as np
 import cv2
+import shlex
+import sys
 
 __width = 1280/2 
 __height = 720
@@ -90,6 +92,48 @@ def calibrateLeft(objpoints, imgpoints):
 def calibrateRight(objpoints, imgpoints):
 	global __rightCalibration
 	__rightCalibration = __calibrate(objpoints, imgpoints)
+	
+def openSavedCalibration(filename, camNo):
+	global __leftCalibration, __rightCalibration
+	
+	left = (camNo==0)
+	
+	calibrationFile = file(filename, 'rt')
+	lexer = shlex.shlex(calibrationFile)
+	lexer.wordchars += ".-"
+	
+	cameraMatrix = None
+	distortion = None
+	rectification = None
+	projection = None
+	
+	token = None
+	while token != lexer.eof:
+		token = lexer.get_token()
+		
+		__cam = __cameraMatrix(token, lexer)
+		if(__cam != None):
+			cameraMatrix = __cam
+		
+		__dist = __distortion(token, lexer)
+		if(__dist != None):
+			distortion = __dist
+		
+		__rect = __rectification(token, lexer)
+		if(__rect != None):
+			rectification = __rect
+		
+		__proj = __projection(token, lexer)
+		if(__proj != None):
+			projection = __proj
+	
+	if(cameraMatrix==None or distortion==None or rectification==None or projection==None):
+		return
+	
+	if(left):
+		__leftCalibration = (1, cameraMatrix, distortion, rectification, projection)
+	else:
+		__rightCalibration = (1, cameraMatrix, distortion, rectification, projection)
 
 def __cameraValid(cam):
 	return cam != None and cam.isOpened()
@@ -134,3 +178,46 @@ def __returnCorrectedImage(settings=None, image=None):
 
 def __calibrate(objpoints, imgpoints):
 	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
+
+def __cameraMatrix(token, lexer):
+	if(token.lower() != "camera"):
+		return
+	
+	nextToken = lexer.get_token()
+	if(nextToken.lower() != "matrix"):
+		lexer.push_token(nextToken)
+		return
+		
+	return __createFloatArrayFromTokens(lexer, (3,3))
+
+def __distortion(token, lexer):
+	if(token.lower() != "distortion"):
+		return
+	
+	return __createFloatArrayFromTokens(lexer, (5,1))
+
+def __rectification(token, lexer):
+	if(token.lower() != "rectification"):
+		return
+	
+	return __createFloatArrayFromTokens(lexer, (3,3))
+
+def __projection(token, lexer):
+	if(token.lower() != "projection"):
+		return
+	
+	return __createFloatArrayFromTokens(lexer, (4,3))
+
+def __createFloatArrayFromTokens(lexer, shape):
+	numberOfElements = shape[0]*shape[1]
+	
+	matrixString = ""
+	for i in range(numberOfElements-1):
+		matrixString += lexer.get_token() + " "
+	
+	matrixString += lexer.get_token()
+	
+	array = np.fromstring(matrixString, dtype=np.float64, sep=" ")
+	array = array.reshape(shape)
+	
+	return array

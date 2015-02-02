@@ -2,7 +2,7 @@ import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
-from helper_functions import setCameraResolutions16x9
+from helper_functions import setCameraResolutions16x9, openSavedCalibration
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side"]
@@ -54,14 +54,22 @@ class MainWindow(wx.Frame):
 		menuAbout = filemenu.Append(wx.ID_ABOUT, "&About"," Information about this program")
 		menuExit = filemenu.Append(wx.ID_EXIT,"&Exit"," Terminate the program")
 		
+		calibrationMenu = wx.Menu()
+		
 		calibration = wx.Menu()
 		calibrate0 = calibration.Append(1, "Calibrate left camera (&0) ")
 		calibrate1 = calibration.Append(2, "Calibrate right camera (&1) ")
+		calibrationMenu.AppendSubMenu(calibration, "Calibrate cameras")
+		
+		openCalibrationMenu = wx.Menu()
+		openCalibrate0 = openCalibrationMenu.Append(3, "Open calibration for left camera (&0) ")
+		openCalibrate1 = openCalibrationMenu.Append(4, "Open calibration for right camera (&1) ")
+		calibrationMenu.AppendSubMenu(openCalibrationMenu, "&Open saved calibration")
 		
 		# Creating the menubar.
 		menuBar = wx.MenuBar()
 		menuBar.Append(filemenu,"&File") # Adding the "filemenu" to the MenuBar
-		menuBar.Append(calibration, "&Calibration")
+		menuBar.Append(calibrationMenu, "&Calibration")
 		self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
 
 		# Set events.
@@ -69,6 +77,8 @@ class MainWindow(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
 		self.Bind(wx.EVT_MENU, self.StartCalibration, calibrate0)
 		self.Bind(wx.EVT_MENU, self.StartCalibration, calibrate1)
+		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate0)
+		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate1)
 		
 		self.Show(True)
 		
@@ -124,6 +134,14 @@ class MainWindow(wx.Frame):
 		self.combo.Show(True)
 		self.combo.SetValue(displayOptions[0])
 		self.sideBySide.Show(True)
+	
+	def OpenCalibration(self, event):
+		openFileDialog = wx.FileDialog(self, "Open saved calibration", "", "","Calibration files (*.txt)|*.txt|Calibration files (*.ini)|*.ini", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+		
+		if openFileDialog.ShowModal() == wx.ID_CANCEL:
+			return	# the user changed idea...
+		
+		openSavedCalibration(openFileDialog.GetPath(), event.Id-3)
 
 if __name__ == '__main__':
 	processPool = Pool()
