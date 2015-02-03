@@ -8,6 +8,8 @@ import sys
 __width = 1280/2 
 __height = 720
 
+__calibrationWidth = __width
+__calibrationHeight = __height
 __leftCalibration = None
 __rightCalibration = None
 
@@ -103,6 +105,8 @@ def openSavedCalibration(filename, camNo):
 	if(width==None or height ==None or cameraMatrix==None or distortion==None or rectification==None or projection==None):
 		return
 	
+	__setCalibrationResolution(width, height)
+	
 	if(left):
 		__leftCalibration = (1, cameraMatrix, distortion, rectification, projection)
 	else:
@@ -150,7 +154,14 @@ def __returnCorrectedImage(settings=None, image=None):
 	return returnValidImage(image, (__calibrationWidth, __calibrationHeight))
 
 def __calibrate(objpoints, imgpoints):
+	__setCalibrationResolution(__width, __height)
 	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
+
+def __setCalibrationResolution(width, height):
+	global __calibrationWidth, __calibrationHeight
+	
+	__calibrationWidth = width
+	__calibrationHeight = height
 
 def __parseIniFile(filename):
 	calibrationFile = file(filename, 'rt')
