@@ -135,9 +135,11 @@ def __getGreenBlueImage(image=None):
 	return  greenBlue
 
 def __combineImages(distance, image1, image2):
-	totalWidth = __width + distance
-	image = np.zeros((__height, totalWidth, 3), np.uint8)
-	image[:, :__width, 2] = image1[:, :, 2]
+	width = image1.shape[1]
+	height = image1.shape[0]
+	totalWidth = width + distance
+	image = np.zeros((height, totalWidth, 3), np.uint8)
+	image[:, :width, 2] = image1[:, :, 2]
 	image[:, distance:, :2] = image2[:, :, :2]
 	return image
 
