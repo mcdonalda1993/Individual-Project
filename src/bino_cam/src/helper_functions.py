@@ -98,36 +98,9 @@ def openSavedCalibration(filename, camNo):
 	
 	left = (camNo==0)
 	
-	calibrationFile = file(filename, 'rt')
-	lexer = shlex.shlex(calibrationFile)
-	lexer.wordchars += ".-"
+	(width, height, cameraMatrix, distortion, rectification, projection) = __parseIniFile(filename)
 	
-	cameraMatrix = None
-	distortion = None
-	rectification = None
-	projection = None
-	
-	token = None
-	while token != lexer.eof:
-		token = lexer.get_token()
-		
-		__cam = __cameraMatrix(token, lexer)
-		if(__cam != None):
-			cameraMatrix = __cam
-		
-		__dist = __distortion(token, lexer)
-		if(__dist != None):
-			distortion = __dist
-		
-		__rect = __rectification(token, lexer)
-		if(__rect != None):
-			rectification = __rect
-		
-		__proj = __projection(token, lexer)
-		if(__proj != None):
-			projection = __proj
-	
-	if(cameraMatrix==None or distortion==None or rectification==None or projection==None):
+	if(width==None or height ==None or cameraMatrix==None or distortion==None or rectification==None or projection==None):
 		return
 	
 	if(left):
@@ -178,6 +151,62 @@ def __returnCorrectedImage(settings=None, image=None):
 
 def __calibrate(objpoints, imgpoints):
 	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
+
+def __parseIniFile(filename):
+	calibrationFile = file(filename, 'rt')
+	lexer = shlex.shlex(calibrationFile)
+	lexer.wordchars += ".-"
+	
+	width = None
+	height = None
+	cameraMatrix = None
+	distortion = None
+	rectification = None
+	projection = None
+	
+	token = None
+	while token != lexer.eof:
+		token = lexer.get_token()
+		
+		__w = __widthParser(token, lexer)
+		if(__w != None):
+			width = __w
+		
+		__h = __heightParser(token, lexer)
+		if(__h != None):
+			height = __h
+		
+		__cam = __cameraMatrix(token, lexer)
+		if(__cam != None):
+			cameraMatrix = __cam
+		
+		__dist = __distortion(token, lexer)
+		if(__dist != None):
+			distortion = __dist
+		
+		__rect = __rectification(token, lexer)
+		if(__rect != None):
+			rectification = __rect
+		
+		__proj = __projection(token, lexer)
+		if(__proj != None):
+			projection = __proj
+	
+	return (width, height, cameraMatrix, distortion, rectification, projection)
+
+def __widthParser(token, lexer):
+	if(token.lower() != "width"):
+		return
+	
+	nextToken = lexer.get_token()
+	return int(nextToken)
+
+def __heightParser(token, lexer):
+	if(token.lower() != "height"):
+		return
+	
+	nextToken = lexer.get_token()
+	return int(nextToken)
 
 def __cameraMatrix(token, lexer):
 	if(token.lower() != "camera"):
