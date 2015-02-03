@@ -96,6 +96,7 @@ def calibrateRight(objpoints, imgpoints):
 	__rightCalibration = __calibrate(objpoints, imgpoints)
 	
 def openSavedCalibration(filename, camNo):
+	global __leftCalibration, __rightCalibration
 	
 	left = (camNo==0)
 	
