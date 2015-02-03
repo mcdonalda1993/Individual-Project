@@ -59,8 +59,8 @@ def setCameraResolutions16x9(cams, h):
 
 def sideBySide(frames):
 	image = None
-	imagePart1 = returnValidImage(frames[0])
-	imagePart2 = returnValidImage(frames[1])
+	imagePart1 = returnValidImage(frames[0], (__width, __height) )
+	imagePart2 = returnValidImage(frames[1], (__width, __height) )
 	image = np.hstack((imagePart1, imagePart2))
 	return image
 
@@ -78,11 +78,11 @@ def correctedSideBySide(frames):
 	image = np.hstack((imagePart1, imagePart2))
 	return image	
 
-def returnValidImage(image):
+def returnValidImage(image, resolution):
 	if image != None:
 		return image
 	else:
-		blank_image = np.zeros((__height, __width, 3), np.uint8)
+		blank_image = np.zeros((resolution[1], resolution[0], 3), np.uint8)
 		return blank_image
 
 def calibrateLeft(objpoints, imgpoints):
@@ -166,7 +166,7 @@ def __combineImages(distance, image1, image2):
 
 def __returnCorrectedImage(settings=None, image=None):
 	if(settings==None or image==None):
-		return returnValidImage(None)
+		return returnValidImage(None, (__calibrationWidth, __calibrationHeight))
 	
 	ret, mtx, dist, rvecs, tvecs = settings
 	
@@ -174,7 +174,7 @@ def __returnCorrectedImage(settings=None, image=None):
 	
 	image = cv2.undistort(image, mtx, dist, None, newcameramtx)
 	
-	return returnValidImage(image)
+	return returnValidImage(image, (__calibrationWidth, __calibrationHeight))
 
 def __calibrate(objpoints, imgpoints):
 	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
