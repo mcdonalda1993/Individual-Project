@@ -77,7 +77,7 @@ def correctedSideBySide(frames):
 	image = None
 	imagePart1 = __returnCorrectedImage(__leftCalibration, frames[0])
 	imagePart2 = __returnCorrectedImage(__rightCalibration, frames[1])
-	image = np.hstack((imagePart1, imagePart2))
+	image = __combineDifferentResolutionImages(imagePart1, imagePart2)
 	return image	
 
 def returnValidImage(image, resolution):
@@ -149,11 +149,50 @@ def __returnCorrectedImage(settings=None, image=None):
 	
 	ret, mtx, dist, rvecs, tvecs = settings
 	
-	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__width, __height), 1, (__width, __height))
+	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__calibrationWidth, __calibrationHeight), 0, (__calibrationWidth, __calibrationHeight))
 	
 	image = cv2.undistort(image, mtx, dist, None, newcameramtx)
 	
+	x,y,w,h = roi
+	image = image[y:y+h, x:x+w]
+	
 	return returnValidImage(image, (__calibrationWidth, __calibrationHeight))
+
+def __combineDifferentResolutionImages(image1, image2):
+	widthDifference = image1.shape[1] - image2.shape[1]
+	heightDifference = image1.shape[0] - image2.shape[0]
+	black  = np.array([0], dtype=np.uint8)
+	
+	if(widthDifference != 0):
+		if (widthDifference < 0):
+			width = abs(widthDifference)
+			height = image1.shape[0]
+			bufferArray = np.repeat( black, (width*height*3))
+			bufferArray = bufferArray.reshape((height, width, 3))
+			image1 = np.hstack((bufferArray, image1))
+		else:
+			width = abs(widthDifference)
+			height = image2.shape[0]
+			bufferArray = np.repeat( black, (width*height*3))
+			bufferArray = bufferArray.reshape((height, width, 3))
+			image2 = np.hstack((image2, bufferArray))
+	
+	if(heightDifference != 0):
+		if(heightDifference < 0):
+			width = image1.shape[1]
+			height = abs(heightDifference)
+			black  = np.array([0], dtype=np.uint8)
+			bufferArray = np.repeat( black, (width*height*3))
+			bufferArray = bufferArray.reshape((height, width, 3))
+			image1 = np.vstack((image1, bufferArray))
+		else:
+			width = image2.shape[1]
+			height = abs(heightDifference)
+			bufferArray = np.repeat( black, (width*height*3))
+			bufferArray = bufferArray.reshape((height, width, 3))
+			image2 = np.vstack((image2, bufferArray))
+	
+	return np.hstack((image1, image2))
 
 def __calibrate(objpoints, imgpoints):
 	__setCalibrationResolution(__width, __height)
