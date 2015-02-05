@@ -3,7 +3,7 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, getWidth, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight
+from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight
 
 class VideoFeed(wx.Panel):
 	
@@ -170,7 +170,7 @@ class Calibration(VideoFeed):
 		self.Layout()
 	
 	def GetImage(self):
-		image = returnValidImage(getFrame(self.Cams))
+		image = returnValidImage(getFrame(self.Cams), (getWidth(), getHeight()) )
 		
 		if(self.__init and self.searchingToggle.GetValue()):
 			
