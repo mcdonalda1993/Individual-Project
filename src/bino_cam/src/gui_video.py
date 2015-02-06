@@ -21,12 +21,11 @@ class VideoFeed(wx.Panel):
 		self.parent.FitInside()
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		self.image = wx.ImageFromData(width, height, image)
+		image = wx.ImageFromData(width, height, image)
 		
 		self.imagePanel = wx.Panel(self)
-		self.imageSizer = wx.BoxSizer(wx.VERTICAL)
-		self.imageSizer.Add(self.image.GetSize())
-		self.imagePanel.SetSizer(self.imageSizer)
+		self.image = wx.StaticBitmap(self.imagePanel)
+		self.image.SetBitmap(image.ConvertToBitmap())
 		
 		self.mainSizer = wx.BoxSizer(wx.VERTICAL)
 		self.mainSizer.Add(self.imagePanel)
@@ -39,14 +38,7 @@ class VideoFeed(wx.Panel):
 		self.timer.Start(1000./fps)
 
 		self.SetDoubleBuffered(True)
-		self.Bind(wx.EVT_PAINT, self.OnPaint)
 		self.Bind(wx.EVT_TIMER, self.NextFrame)
-
-
-	def OnPaint(self, event):
-		dc = wx.BufferedPaintDC(self.imagePanel)
-		if(dc.IsOk() and dc.CanDrawBitmap()):
-			dc.DrawBitmap(self.image.ConvertToBitmap(), 0, 0)
 
 	def NextFrame(self, event):
 		image = self.GetImage()
@@ -54,14 +46,11 @@ class VideoFeed(wx.Panel):
 		height, width = image.shape[:2]
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-		self.image = wx.ImageFromData(width, height, image)
+		image = wx.ImageFromData(width, height, image)
 		
-		self.imageSizer.Clear()
-		self.imageSizer.Add(self.image.GetSize())
+		self.image.SetBitmap(image.ConvertToBitmap())
 		
 		wx.YieldIfNeeded()
-		self.Update()
-		self.Refresh()
 	
 	def Show(self, show):
 		if(show):
@@ -105,8 +94,7 @@ class RedGreen(VideoFeed):
 	def OnSliderChanged(self, event):
 		self.distance = self.slider.GetValue()
 	
-	def OnSliderRelease(self, event):
-		## TODO Fix scroll virtual size not updating with change in distance slider		
+	def OnSliderRelease(self, event):	
 		self.parent.FitInside()
 		self.parent.Layout()
 		self.Refresh()
