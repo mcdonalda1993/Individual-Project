@@ -149,7 +149,7 @@ def __returnCorrectedImage(settings=None, image=None):
 	
 	ret, mtx, dist, rvecs, tvecs = settings
 	
-	image = __resize(image)
+	image = __resize(image, (__calibrationWidth, __calibrationHeight))
 	
 	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (__calibrationWidth, __calibrationHeight), 0, (__calibrationWidth, __calibrationHeight))
 	
@@ -196,15 +196,15 @@ def __combineDifferentResolutionImages(image1, image2):
 	
 	return np.hstack((image1, image2))
 
-def __resize(image):
+def __resize(image, target):
 	width = image.shape[1]
 	height = image.shape[0]
-	invfx = width/__calibrationWidth
-	invfy = height/__calibrationHeight
+	invfx = width/target[0]
+	invfy = height/target[1]
 	
-	if((width%__calibrationWidth) > (__calibrationWidth/2.0)):
+	if((width%target[0]) > (target[0]/2.0)):
 		invfx += 1
-	if((height%__calibrationHeight) > (__calibrationHeight/2.0)):
+	if((height%target[1]) > (target[1]/2.0)):
 		invfy += 1
 	
 	fx = 1.0/float(invfx)
