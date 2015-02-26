@@ -1,11 +1,14 @@
+#!/usr/bin/env python
+
 import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
 from helper_functions import setCameraResolutions16x9, openSavedCalibration
 from gui_video import *
+import rospy
 
-displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side"]
+displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side", "Point Cloud"]
 
 class MainWindow(wx.Frame):
 	def __init__(self, parent, title, processPool):
@@ -90,6 +93,13 @@ class MainWindow(wx.Frame):
 		# Slider control is only shown for RedGreen feed
 		
 		self.correctedSideBySide.Show(self.combo.GetCurrentSelection() == 2)
+		if(hasattr(self, "pointCloud")):
+			self.pointCloud.Show(self.combo.GetCurrentSelection()==3)
+		elif(self.combo.GetCurrentSelection()==3):
+			self.pointCloud = PointCloud(self.panel, self.Cams)
+			mainSizer = self.panel.GetSizer()
+			mainSizer.Add(self.pointCloud)
+			self.panel.SetSizer(mainSizer)
 		
 		self.panel.FitInside()
 		self.panel.Layout()
@@ -105,10 +115,10 @@ class MainWindow(wx.Frame):
 		self.sideBySide.Show(False)
 		self.redGreen.Show(False)
 		self.correctedSideBySide.Show(False)
-		try:
+		if(hasattr(self, "calibrationFeed")):
 			self.calibrationFeed.Show(False)
-		except:
-			pass
+		if(hasattr(self, "pointCloud")):
+			self.pointCloud.Destroy()
 		self.Cams[0].release()
 		self.Cams[1].release()
 		self.Close(True)  # Close the frame.
@@ -142,8 +152,12 @@ class MainWindow(wx.Frame):
 			return	# the user changed idea...
 		
 		openSavedCalibration(openFileDialog.GetPath(), event.Id-3)
+		self.panel.FitInside()
+		self.panel.Layout()
+		self.Refresh()
 
 if __name__ == '__main__':
+	rospy.init_node("camera_gui", anonymous=True)
 	processPool = Pool()
 	app = wx.App(False)
 	frame = MainWindow(None, "Binocular Algorithm Example", processPool)

@@ -1,9 +1,11 @@
+#!/usr/bin/env python
+
 import cv2
 import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight
+from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, getImageFromROS, returnValidImage, calibrateLeft, calibrateRight, initializePointCloud, destroyPointCloud
 
 class VideoFeed(wx.Panel):
 	
@@ -103,6 +105,19 @@ class CorrectedSideBySide(VideoFeed):
 	
 	def GetImage(self):
 		return correctedSideBySide(getFrames(self.Cams))
+
+class PointCloud(VideoFeed):
+	
+	def __init__(self, parent, cams, fps=30):
+		initializePointCloud()
+		super(PointCloud, self).__init__(parent, cams, fps)
+	
+	def GetImage(self):
+		return getImageFromROS(getFrames(self.Cams))
+	
+	def Destroy(self):
+		destroyPointCloud()
+		super(PointCloud, self).Destroy()
 
 class Calibration(VideoFeed):
 	CalibrationEnded, EVT_CALIBRATION_ENDED = wx.lib.newevent.NewEvent()
