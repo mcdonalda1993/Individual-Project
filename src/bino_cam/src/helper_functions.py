@@ -324,6 +324,9 @@ def __unwrapValues(array):
 			array[i] = __unwrapValues(array[i])
 		return array
 
+def __makeTuple(array):
+	return tuple(array)
+
 ####################################################################################
 
 def calibrateLeft(objpoints, imgpoints):
