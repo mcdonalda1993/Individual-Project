@@ -41,13 +41,6 @@ def getFrame(cam):
 	except:
 		return None
 
-def getDistance(window, taskbarName):
-	position = cv2.getTrackbarPos(taskbarName, window)
-	if(position == -1):
-		return 0
-	else:
-		return position
-
 def getHeight():
 	return __height
 	
@@ -63,12 +56,26 @@ def disableAutoFocus():
 
 def setFocus(cam, focus):
 	os.system('v4l2-ctl -d '+ str(cam) +' -c focus_absolute=' + str(focus))
-	
+
 def setCameraResolutions(cams, w, h):
 	if(__cameraValid(cams[0])):
 		__setCameraResolution(cams[0], w, h)
 	if(__cameraValid(cams[1])):
 		__setCameraResolution(cams[1], w, h)
+
+#----------------------------------------------------------------------------------#
+
+def __cameraValid(cam):
+	return (cam is not None) and cam.isOpened()
+
+def __setCameraResolution(cam, w, h):
+	global __width, __height 
+	cam.set(3, w)
+	cam.set(4, h)
+	__width = int(cam.get(3))
+	__height = int(cam.get(4))
+
+####################################################################################
 
 def setCameraResolutions16x9(cams, h):
 	w = 16 * (h/9)
@@ -84,102 +91,31 @@ def sideBySide(frames):
 	image = np.hstack((imagePart1, imagePart2))
 	return image
 
+def returnValidImage(image, resolution):
+	if image is not None:
+		return image
+	else:
+		blank_image = np.zeros((resolution[1], resolution[0], 3), np.uint8)
+		return blank_image
+
 def redGreen(distance, frames):
 	image = None
 	imagePart1 = __getRedImage(frames[0])
 	imagePart2 = __getGreenBlueImage(frames[1])
 	image = __combineImages(distance, imagePart1, imagePart2)
 	return image
-
-def correctedSideBySide(frames):
-	image = None
-	imagePart1 = __returnCorrectedImage(__leftCalibration, frames[0])
-	imagePart2 = __returnCorrectedImage(__rightCalibration, frames[1])
-	image = __combineDifferentResolutionImages(imagePart1, imagePart2)
-	return image
-
-def getImageFromROS(frames):
-	global __imageQueue, __lastPointCloud
-	cameraSync = CamerasSync()
-	cameraSync.data = "full"
-	cameraSync.timeStamp = rospy.Time.now()
-	__pubAcquireImages.publish(cameraSync)
-	__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
-	__pubImageLeft[1].publish(__constructROSCameraInfo(__leftCalibration, cameraSync.timeStamp))
-	__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
-	__pubImageRight[1].publish(__constructROSCameraInfo(__rightCalibration, cameraSync.timeStamp))
-	image = None
-	try:
-		image = __imageQueue.pop(0)
-	except:
-		# print "helper_functions, getImageFromROS: Empty Queue"
-		image = __lastPointCloud
-
-	__lastPointCloud = image
-	return returnValidImage(image, (__width, __height))
-
-def returnValidImage(image, resolution):
-	if image != None:
-		return image
-	else:
-		blank_image = np.zeros((resolution[1], resolution[0], 3), np.uint8)
-		return blank_image
-
-def calibrateLeft(objpoints, imgpoints):
-	global __leftCalibration
-	__leftCalibration = __calibrate(objpoints, imgpoints)
-
-def calibrateRight(objpoints, imgpoints):
-	global __rightCalibration
-	__rightCalibration = __calibrate(objpoints, imgpoints)	
-
-def initializePointCloud():
-	global __rosImageSource, __imageQueue
-	__imageQueue = []
-	__launchMatcherNode()
-	__initializeROSTopics()
-	__rosImageSource = rospy.Subscriber('output_pointcloud', PointCloud2, __collectPointCloudData)
-
-def destroyPointCloud():
-	global __proc
-	__proc.send_signal(signal.SIGINT)
 	
-def openSavedCalibration(filename, camNo):
-	global __leftCalibration, __rightCalibration
-	
-	left = (camNo==0)
-	
-	(width, height, cameraMatrix, distortion, rectification, projection) = __parseIniFile(filename)
-	
-	if(width==None or height ==None or cameraMatrix==None or distortion==None or rectification==None or projection==None):
-		return
-	
-	__setCalibrationResolution(width, height)
-	
-	if(left):
-		__leftCalibration = (1, cameraMatrix, distortion, rectification, projection)
-	else:
-		__rightCalibration = (1, cameraMatrix, distortion, rectification, projection)
-
-def __cameraValid(cam):
-	return cam != None and cam.isOpened()
-
-def __setCameraResolution(cam, w, h):
-	global __width, __height 
-	cam.set(3, w)
-	cam.set(4, h)
-	__width = int(cam.get(3))
-	__height = int(cam.get(4))
+#----------------------------------------------------------------------------------#
 
 def __getRedImage(image=None): 
 	red = np.zeros((__height, __width, 3), np.uint8)
-	if image != None:
+	if image is not None:
 		red[:,:,2] = image[:,:,2]	#(B, G, R)
 	return red
 	
 def __getGreenBlueImage(image=None): 
 	greenBlue = np.zeros((__height, __width, 3), np.uint8)
-	if image != None:
+	if image is not None:
 		greenBlue[:,:,:2] = image[:,:,:2]	# (B, G, R)
 	return  greenBlue
 
@@ -191,9 +127,20 @@ def __combineImages(distance, image1, image2):
 	image[:, :width, 2] = image1[:, :, 2]
 	image[:, distance:, :2] = image2[:, :, :2]
 	return image
+	
+####################################################################################
+
+def correctedSideBySide(frames):
+	image = None
+	imagePart1 = __returnCorrectedImage(__leftCalibration, frames[0])
+	imagePart2 = __returnCorrectedImage(__rightCalibration, frames[1])
+	image = __combineDifferentResolutionImages(imagePart1, imagePart2)
+	return image
+	
+#----------------------------------------------------------------------------------#
 
 def __returnCorrectedImage(settings=None, image=None):
-	if(settings==None or image==None):
+	if((settings is None) or (image is None)):
 		return returnValidImage(None, (__calibrationWidth, __calibrationHeight))
 	
 	ret, mtx, dist, rvecs, tvecs = settings
@@ -208,6 +155,22 @@ def __returnCorrectedImage(settings=None, image=None):
 	image = image[y:y+h, x:x+w]
 	
 	return returnValidImage(image, (__calibrationWidth, __calibrationHeight))
+
+def __resize(image, target):
+	width = image.shape[1]
+	height = image.shape[0]
+	invfx = width/target[0]
+	invfy = height/target[1]
+	
+	if((width%target[0]) > (target[0]/2.0)):
+		invfx += 1
+	if((height%target[1]) > (target[1]/2.0)):
+		invfy += 1
+	
+	fx = 1.0/float(invfx)
+	fy = 1.0/float(invfy)
+	
+	return cv2.resize(image, (0, 0), fx=fx, fy=fy) 
 
 def __combineDifferentResolutionImages(image1, image2):
 	widthDifference = image1.shape[1] - image2.shape[1]
@@ -244,32 +207,17 @@ def __combineDifferentResolutionImages(image1, image2):
 			image2 = np.vstack((image2, bufferArray))
 	
 	return np.hstack((image1, image2))
+	
+####################################################################################
 
-def __resize(image, target):
-	width = image.shape[1]
-	height = image.shape[0]
-	invfx = width/target[0]
-	invfy = height/target[1]
-	
-	if((width%target[0]) > (target[0]/2.0)):
-		invfx += 1
-	if((height%target[1]) > (target[1]/2.0)):
-		invfy += 1
-	
-	fx = 1.0/float(invfx)
-	fy = 1.0/float(invfy)
-	
-	return cv2.resize(image, (0, 0), fx=fx, fy=fy) 
+def initializePointCloud():
+	global __rosImageSource, __imageQueue
+	__imageQueue = []
+	__launchMatcherNode()
+	__initializeROSTopics()
+	__rosImageSource = rospy.Subscriber('output_pointcloud', PointCloud2, __collectPointCloudData)
 
-def __calibrate(objpoints, imgpoints):
-	__setCalibrationResolution(__width, __height)
-	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
-
-def __setCalibrationResolution(width, height):
-	global __calibrationWidth, __calibrationHeight
-	
-	__calibrationWidth = width
-	__calibrationHeight = height
+#----------------------------------------------------------------------------------#
 
 def __launchMatcherNode():
 	global __proc
@@ -302,6 +250,46 @@ def __collectPointCloudData(data):
 	image = __constructDepthImage(width, height, maxDist, points)
 	image = np.swapaxes(image, 0, 1)
 	__imageQueue.append(image)
+
+def __constructDepthImage(width, height, maxDist, points):
+	for i in range(width):
+		for j in range(height):
+			point = points[i][j]
+			value = (point/maxDist) * 255
+			points[i][j] = (0, int(value), 0)
+	image = np.array(points, dtype=np.uint8)
+	for i in range(width):
+		for j in range(height):
+			image[i][j] = tuple(image[i][j])
+	return image
+
+####################################################################################
+
+def destroyPointCloud():
+	global __proc
+	__proc.send_signal(signal.SIGINT)
+
+def getImageFromROS(frames):
+	global __imageQueue, __lastPointCloud
+	cameraSync = CamerasSync()
+	cameraSync.data = "full"
+	cameraSync.timeStamp = rospy.Time.now()
+	__pubAcquireImages.publish(cameraSync)
+	__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
+	__pubImageLeft[1].publish(__constructROSCameraInfo(__leftCalibration, cameraSync.timeStamp))
+	__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
+	__pubImageRight[1].publish(__constructROSCameraInfo(__rightCalibration, cameraSync.timeStamp))
+	image = None
+	try:
+		image = __imageQueue.pop(0)
+	except:
+		# print "helper_functions, getImageFromROS: Empty Queue"
+		image = __lastPointCloud
+
+	__lastPointCloud = image
+	return returnValidImage(image, (__width, __height))
+
+#----------------------------------------------------------------------------------#
 
 def __constructROSImage(image, timestamp):
 	image = __bridge.cv2_to_imgmsg(image, encoding="rgb8")
@@ -336,20 +324,48 @@ def __unwrapValues(array):
 			array[i] = __unwrapValues(array[i])
 		return array
 
-def __makeTuple(array):
-	return tuple(array)
+####################################################################################
 
-def __constructDepthImage(width, height, maxDist, points):
-	for i in range(width):
-		for j in range(height):
-			point = points[i][j]
-			value = (point/maxDist) * 255
-			points[i][j] = (0, int(value), 0)
-	image = np.array(points, dtype=np.uint8)
-	for i in range(width):
-		for j in range(height):
-			image[i][j] = tuple(image[i][j])
-	return image
+def calibrateLeft(objpoints, imgpoints):
+	global __leftCalibration
+	__leftCalibration = __calibrate(objpoints, imgpoints)
+	
+#----------------------------------------------------------------------------------#
+
+def __calibrate(objpoints, imgpoints):
+	__setCalibrationResolution(__width, __height)
+	return cv2.calibrateCamera(objpoints, imgpoints, (__width, __height), None, None)
+
+def __setCalibrationResolution(width, height):
+	global __calibrationWidth, __calibrationHeight
+	
+	__calibrationWidth = width
+	__calibrationHeight = height
+
+####################################################################################
+
+def calibrateRight(objpoints, imgpoints):
+	global __rightCalibration
+	__rightCalibration = __calibrate(objpoints, imgpoints)	
+	
+def openSavedCalibration(filename, camNo):
+	global __leftCalibration, __rightCalibration
+	
+	left = (camNo==0)
+	
+	(width, height, cameraMatrix, distortion, rectification, projection) = __parseIniFile(filename)
+	
+	if((width is None) or (height  is None) or (cameraMatrix is None) or (distortion is None) or (rectification is None) or (projection is None)):
+		return
+	
+	__setCalibrationResolution(width, height)
+	
+	if(left):
+		__leftCalibration = (1, cameraMatrix, distortion, rectification, projection)
+	else:
+		__rightCalibration = (1, cameraMatrix, distortion, rectification, projection)
+
+#----------------------------------------------------------------------------------#
 
 def __parseIniFile(filename):
 	calibrationFile = file(filename, 'rt')
@@ -368,27 +384,27 @@ def __parseIniFile(filename):
 		token = lexer.get_token()
 		
 		__w = __widthParser(token, lexer)
-		if(__w != None):
+		if(__w is not None):
 			width = __w
 		
 		__h = __heightParser(token, lexer)
-		if(__h != None):
+		if(__h is not None):
 			height = __h
 		
 		__cam = __cameraMatrix(token, lexer)
-		if(__cam != None):
+		if(__cam is not None):
 			cameraMatrix = __cam
 		
 		__dist = __distortion(token, lexer)
-		if(__dist != None):
+		if(__dist is not None):
 			distortion = __dist
 		
 		__rect = __rectification(token, lexer)
-		if(__rect != None):
+		if(__rect is not None):
 			rectification = __rect
 		
 		__proj = __projection(token, lexer)
-		if(__proj != None):
+		if(__proj is not None):
 			projection = __proj
 	
 	return (width, height, cameraMatrix, distortion, rectification, projection)
@@ -449,3 +465,5 @@ def __createFloatArrayFromTokens(lexer, shape):
 	array = array.reshape(shape)
 	
 	return array
+
+####################################################################################
