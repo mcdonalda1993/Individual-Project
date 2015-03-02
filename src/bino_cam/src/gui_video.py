@@ -5,7 +5,9 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, getImageFromROS, returnValidImage, calibrateLeft, calibrateRight, initializePointCloud, destroyPointCloud
+from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight, \
+							 getImageFromROS, initializeDepthMap, destroyDepthMap, initializePointCloud, destroyPointCloud
+from vtk_gui import VtkPointCloud
 
 class VideoFeed(wx.Panel):
 	
@@ -106,14 +108,39 @@ class CorrectedSideBySide(VideoFeed):
 	def GetImage(self):
 		return correctedSideBySide(getFrames(self.Cams))
 
+class DepthMap(VideoFeed):
+	
+	def __init__(self, parent, cams, fps=30):
+		initializeDepthMap()
+		super(DepthMap, self).__init__(parent, cams, fps)
+	
+	def GetImage(self):
+		return getImageFromROS(getFrames(self.Cams))
+	
+	def Destroy(self):
+		destroyDepthMap()
+		super(DepthMap, self).Destroy()
+
 class PointCloud(VideoFeed):
 	
 	def __init__(self, parent, cams, fps=30):
 		initializePointCloud()
+		
 		super(PointCloud, self).__init__(parent, cams, fps)
+		
+		self.vtkPointCloud = VtkPointCloud(self)
+		
+		self.mainSizer.Prepend(self.vtkPointCloud)
+		self.Layout()
 	
 	def GetImage(self):
-		return getImageFromROS(getFrames(self.Cams))
+		image = getImageFromROS(getFrames(self.Cams))
+		self.vtkPointCloud.clearPoints()
+		for i in range(image.shape[0]):
+			for j in range(image.shape[1]):
+				point = image[i][j]
+				self.vtkPointCloud.addPoint( (i, j, point[3]) )
+		## May need rerender function call
 	
 	def Destroy(self):
 		destroyPointCloud()

@@ -210,12 +210,12 @@ def __combineDifferentResolutionImages(image1, image2):
 	
 ####################################################################################
 
-def initializePointCloud():
+def initializeDepthMap():
 	global __rosImageSource, __imageQueue
-	__imageQueue = []
 	__launchMatcherNode()
+	__imageQueue = []
 	__initializeROSTopics()
-	__rosImageSource = rospy.Subscriber('output_pointcloud', PointCloud2, __collectPointCloudData)
+	__rosImageSource = rospy.Subscriber('output_pointcloud', PointCloud2, __collectDepthMapData)
 
 #----------------------------------------------------------------------------------#
 
@@ -229,8 +229,16 @@ def __initializeROSTopics():
 	__pubImageLeft = ( rospy.Publisher("input_left_image", Image, queue_size=30), rospy.Publisher("camera_info_left", CameraInfo, queue_size=30) )
 	__pubImageRight = ( rospy.Publisher("input_right_image", Image, queue_size=30), rospy.Publisher("camera_info_right", CameraInfo, queue_size=30) )
 
-def __collectPointCloudData(data):
+def __collectDepthMapData(data):
 	global __imageQueue
+	
+	(width, height, maxDist, points) = __collectPointCloudData(data)
+	
+	image = __constructDepthImage(width, height, maxDist, points)
+	image = np.swapaxes(image, 0, 1)
+	__imageQueue.append(image)
+
+def __extractPointCloudData(data):
 	iterData = pc2.read_points(data)
 	points = []
 	height = sqrt((data.width/float(16))*9)
@@ -244,17 +252,15 @@ def __collectPointCloudData(data):
 			point = next(iterData)
 			if(point[3]>maxDist):
 				maxDist=point[3]
-			intermediate.append(point[3])
+			intermediate.append(point)
 		points.append(intermediate)
 	
-	image = __constructDepthImage(width, height, maxDist, points)
-	image = np.swapaxes(image, 0, 1)
-	__imageQueue.append(image)
+	return (width, height, maxDist, points)
 
 def __constructDepthImage(width, height, maxDist, points):
 	for i in range(width):
 		for j in range(height):
-			point = points[i][j]
+			zPoint = points[i][j][3]
 			value = (point/maxDist) * 255
 			points[i][j] = (0, int(value), 0)
 	image = np.array(points, dtype=np.uint8)
@@ -265,9 +271,33 @@ def __constructDepthImage(width, height, maxDist, points):
 
 ####################################################################################
 
-def destroyPointCloud():
+def destroyDepthMap():
 	global __proc
 	__proc.send_signal(signal.SIGINT)
+	
+def initializePointCloud():
+	global __rosImageSource, __imageQueue
+	__launchMatcherNode()
+	__imageQueue = []
+	__initializeROSTopics()
+	__rosImageSource = rospy.Subscriber('output_pointcloud', PointCloud2, __collectPointCloudData)
+
+#----------------------------------------------------------------------------------#
+
+def __collectPointCloudData(data):
+	global __imageQueue
+	
+	(width, height, maxDist, points) = __collectPointCloudData(data)
+	
+	pointCloudData = np.array(points)
+	pointCloudData = np.swapaxes(pointCloudData, 0, 1)
+	
+	__imageQueue.append(pointCloudData)
+
+####################################################################################
+
+def destroyPointCloud():
+	destroyDepthMap()
 
 def getImageFromROS(frames):
 	global __imageQueue, __lastPointCloud

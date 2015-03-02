@@ -8,7 +8,7 @@ from helper_functions import setCameraResolutions16x9, openSavedCalibration
 from gui_video import *
 import rospy
 
-displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side", "Point Cloud"]
+displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side", "Depth Map", "Point Cloud"]
 
 class MainWindow(wx.Frame):
 	def __init__(self, parent, title, processPool):
@@ -93,9 +93,17 @@ class MainWindow(wx.Frame):
 		# Slider control is only shown for RedGreen feed
 		
 		self.correctedSideBySide.Show(self.combo.GetCurrentSelection() == 2)
-		if(hasattr(self, "pointCloud")):
-			self.pointCloud.Show(self.combo.GetCurrentSelection()==3)
+		if(hasattr(self, "depthMap")):
+			self.depthMap.Show(self.combo.GetCurrentSelection()==3)
 		elif(self.combo.GetCurrentSelection()==3):
+			self.depthMap = DepthMap(self.panel, self.Cams)
+			mainSizer = self.panel.GetSizer()
+			mainSizer.Add(self.depthMap)
+			self.panel.SetSizer(mainSizer)
+			
+		if(hasattr(self, "pointCloud")):
+			self.pointCloud.Show(self.combo.GetCurrentSelection()==4)
+		elif(self.combo.GetCurrentSelection()==4):
 			self.pointCloud = PointCloud(self.panel, self.Cams)
 			mainSizer = self.panel.GetSizer()
 			mainSizer.Add(self.pointCloud)
@@ -117,6 +125,8 @@ class MainWindow(wx.Frame):
 		self.correctedSideBySide.Show(False)
 		if(hasattr(self, "calibrationFeed")):
 			self.calibrationFeed.Show(False)
+		if(hasattr(self, "depthMap")):
+			self.depthMap.Destroy()
 		if(hasattr(self, "pointCloud")):
 			self.pointCloud.Destroy()
 		self.Cams[0].release()
