@@ -8,3 +8,4 @@ Requires OpenCV and wxPython to be installed. OpenCV comes with the Robot Operta
 I used http://www.lfd.uci.edu/~gohlke/pythonlibs/ to install OpenCV, wxPython-Common and wxPython on Windows (32 bit versions).
 
 Also requires the Visualization Toolkit (VTK) which can be downloaded from http://www.vtk.org/VTK/resources/software.html
+Version 5.8.0

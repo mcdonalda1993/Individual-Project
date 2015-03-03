@@ -6,7 +6,7 @@ import wx
 import wx.lib.newevent
 import abc
 from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight, \
-							 getImageFromROS, initializeDepthMap, destroyDepthMap, initializePointCloud, destroyPointCloud
+							 getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
 from vtk_gui import VtkPointCloud
 
 class VideoFeed(wx.Panel):
@@ -46,7 +46,7 @@ class VideoFeed(wx.Panel):
 
 	def NextFrame(self, event):
 		image = self.GetImage()
-		
+
 		height, width = image.shape[:2]
 		
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -111,36 +111,49 @@ class CorrectedSideBySide(VideoFeed):
 class DepthMap(VideoFeed):
 	
 	def __init__(self, parent, cams, fps=30):
-		initializeDepthMap()
+		initializePointCloud()
 		super(DepthMap, self).__init__(parent, cams, fps)
 	
 	def GetImage(self):
-		return getImageFromROS(getFrames(self.Cams))
+		data = getDataFromROS(getFrames(self.Cams))
+		if(data is None):
+			return returnValidImage(None, (1, 1))
+		(maxDist, pointCloudData) = data
+		return constructDepthMapImage(maxDist, pointCloudData)
 	
 	def Destroy(self):
-		destroyDepthMap()
+		destroyPointCloud()
 		super(DepthMap, self).Destroy()
 
 class PointCloud(VideoFeed):
 	
 	def __init__(self, parent, cams, fps=30):
+		self.initialized = False
 		initializePointCloud()
 		
 		super(PointCloud, self).__init__(parent, cams, fps)
 		
-		self.vtkPointCloud = VtkPointCloud(self)
+		self.imagePanel.Show(False)		
 		
-		self.mainSizer.Prepend(self.vtkPointCloud)
+		self.vtkPointCloud = VtkPointCloud(self)
+		self.vtkPointCloud.SetSize( (getWidth(), getHeight()) )
+		
+		self.mainSizer.Prepend(self.vtkPointCloud.GetSize(), wx.EXPAND)
+
 		self.Layout()
+		self.initialized = True
 	
 	def GetImage(self):
-		image = getImageFromROS(getFrames(self.Cams))
-		self.vtkPointCloud.clearPoints()
-		for i in range(image.shape[0]):
-			for j in range(image.shape[1]):
-				point = image[i][j]
-				self.vtkPointCloud.addPoint( (i, j, point[3]) )
-		## May need rerender function call
+		data = getDataFromROS(getFrames(self.Cams))
+		if(self.initialized and data is not None):
+			(maxDist, pointCloudData) = data
+			self.vtkPointCloud.clearPoints()
+			for i in range(pointCloudData.shape[0]):
+				for j in range(pointCloudData.shape[1]):
+					point = pointCloudData[i][j]
+					self.vtkPointCloud.addPoint( (i, j, point[3]) )
+			## May need rerender function call
+		return returnValidImage(None, (1, 1))
 	
 	def Destroy(self):
 		destroyPointCloud()

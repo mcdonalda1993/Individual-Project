@@ -3,7 +3,7 @@ import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 class VtkPointCloud(wx.Panel):
-	def __init__(self, parent, size=3, zMin=-10.0, zMax=10.0, maxNumPoints=1e6):
+	def __init__(self, parent, pointSize=3, zMin=-10.0, zMax=10.0, maxNumPoints=1e6):
 		wx.Panel.__init__(self, parent)
 		 
 		#to interact with the scene using the mouse use an instance of vtkRenderWindowInteractor. 
@@ -15,16 +15,18 @@ class VtkPointCloud(wx.Panel):
 		self.SetSizer(self.sizer)
 		self.Layout()
 		
+		wx.YieldIfNeeded()
+		
 		self.maxNumPoints = maxNumPoints
 		self.vtkPolyData = vtk.vtkPolyData()
 		self.clearPoints()
 		mapper = vtk.vtkPolyDataMapper()
-		mapper.SetInputData(self.vtkPolyData)
+		mapper.SetInput(self.vtkPolyData)
 		mapper.SetColorModeToDefault()
 		mapper.SetScalarRange(zMin, zMax)
 		mapper.SetScalarVisibility(1)
 		self.vtkActor = vtk.vtkActor()
-		self.vtkActor.GetProperty().SetPointSize(size);
+		self.vtkActor.GetProperty().SetPointSize(pointSize);
 		self.vtkActor.SetMapper(mapper)
 		
 		# Renderer
@@ -51,7 +53,6 @@ class VtkPointCloud(wx.Panel):
 	def addPoint(self, point):
 		if self.vtkPoints.GetNumberOfPoints() < self.maxNumPoints:
 			pointId = self.vtkPoints.InsertNextPoint(point[:])
-			print self.vtkPoints.GetNumberOfPoints()
 			self.vtkDepth.InsertNextValue(point[2])
 			self.vtkCells.InsertNextCell(1)
 			self.vtkCells.InsertCellPoint(pointId)
