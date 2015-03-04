@@ -5,8 +5,8 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import *
-from ros_helper_functions import getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
+from camera_functions import *
+from ros_functions import getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
 from vtk_gui import VtkPointCloud
 
 class VideoFeed(wx.Panel):

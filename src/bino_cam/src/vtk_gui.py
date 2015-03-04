@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import wx
 import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
