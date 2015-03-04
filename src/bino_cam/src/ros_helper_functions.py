@@ -87,17 +87,17 @@ def destroyPointCloud():
 	global __proc
 	__proc.send_signal(signal.SIGINT)
 
-def getDataFromROS(frames, calibration):
+def getDataFromROS(frames, dimensions, calibration):
 	global __imageQueue, __lastPointCloud
-	(__leftCalibration, __rightCalibration) = calibration
+	(leftCalibration, rightCalibration) = calibration
 	cameraSync = CamerasSync()
 	cameraSync.data = "full"
 	cameraSync.timeStamp = rospy.Time.now()
 	__pubAcquireImages.publish(cameraSync)
-	__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
-	__pubImageLeft[1].publish(__constructROSCameraInfo(__leftCalibration, cameraSync.timeStamp))
-	__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
-	__pubImageRight[1].publish(__constructROSCameraInfo(__rightCalibration, cameraSync.timeStamp))
+	__pubImageLeft[0].publish(__constructROSImage(frames[0], dimensions, cameraSync.timeStamp))
+	__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, cameraSync.timeStamp))
+	__pubImageRight[0].publish(__constructROSImage(frames[1], dimensions, cameraSync.timeStamp))
+	__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, cameraSync.timeStamp))
 	image = None
 	try:
 		image = __imageQueue.pop(0)
@@ -115,14 +115,15 @@ def __constructROSImage(image, timestamp):
 	image.header.stamp = timestamp
 	return image
 
-def __constructROSCameraInfo(calibration, timestamp):
+def __constructROSCameraInfo(calibration, dimensions, timestamp):
+	(calibrationWidth, calibrationHeight) = dimensions
 	(ret, cameraMatrix, distortion, rectification, projection) = calibration
 	h = Header()
 	h.stamp = timestamp
 	distortion = __makeTuple(__unwrapValues(distortion))
 	cameraInfo = CameraInfo()
-	cameraInfo.width = __calibrationWidth
-	cameraInfo.height = __calibrationHeight
+	cameraInfo.width = calibrationWidth
+	cameraInfo.height = calibrationHeight
 	cameraInfo.header = h
 	cameraInfo.distortion_model = "plumb_bob"
 	cameraInfo.D = distortion

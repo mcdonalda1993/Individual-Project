@@ -30,6 +30,18 @@ def getHeight():
 	
 def getWidth():
 	return __width
+
+def getCalibrationHeight():
+	return __calibrationHeight
+	
+def getCalibrationWidth():
+	return __calibrationWidth
+
+def getLeftCalibration():
+	return __leftCalibration
+
+def getRightCalibration():
+	return __rightCalibration
 		
 def disableAutoFocus():
 	## If that doesn't work try, sudo apt-get install v4l-utils
@@ -215,12 +227,6 @@ def __setCalibrationResolution(width, height):
 def calibrateRight(objpoints, imgpoints):
 	global __rightCalibration
 	__rightCalibration = __calibrate(objpoints, imgpoints)
-
-def getLeftCalibration():
-	return __leftCalibration
-
-def getRightCalibration():
-	return __rightCalibration
 	
 def openSavedCalibration(filename, camNo):
 	global __leftCalibration, __rightCalibration
