@@ -2,6 +2,7 @@
 
 import rospy
 import roslib
+from math import sqrt
 import numpy as np
 import subprocess
 import signal

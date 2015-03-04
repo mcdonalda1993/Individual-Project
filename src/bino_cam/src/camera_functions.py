@@ -3,7 +3,6 @@
 import os
 import numpy as np
 import cv2
-from math import sqrt
 import shlex
 import sys
 
