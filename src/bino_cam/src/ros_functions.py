@@ -43,11 +43,8 @@ def __collectPointCloudData(data):
 	global __imageQueue
 	
 	(maxDist, points) = __extractPointCloudData(data)
-	
-	pointCloudData = np.array(points)
-	pointCloudData = np.swapaxes(pointCloudData, 0, 1)
 
-	__imageQueue.append( (maxDist, pointCloudData) )
+	__imageQueue.append( (maxDist, points) )
 
 def __extractPointCloudData(data):
 	iterData = pc2.read_points(data)
@@ -66,8 +63,10 @@ def __extractPointCloudData(data):
 			intermediate.append(point)
 		points.append(intermediate)
 	
+	points = np.array(points)
+	points = np.swapaxes(points, 0, 1)
+	
 	return (maxDist, points)
-
 
 ####################################################################################
 
