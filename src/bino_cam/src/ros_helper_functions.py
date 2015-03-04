@@ -94,10 +94,10 @@ def getDataFromROS(frames, dimensions, calibration):
 	cameraSync.data = "full"
 	cameraSync.timeStamp = rospy.Time.now()
 	__pubAcquireImages.publish(cameraSync)
-	__pubImageLeft[0].publish(__constructROSImage(frames[0], dimensions, cameraSync.timeStamp))
-	__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, cameraSync.timeStamp))
-	__pubImageRight[0].publish(__constructROSImage(frames[1], dimensions, cameraSync.timeStamp))
-	__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, cameraSync.timeStamp))
+	__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
+	__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, dimensions, cameraSync.timeStamp))
+	__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
+	__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, dimensions, cameraSync.timeStamp))
 	image = None
 	try:
 		image = __imageQueue.pop(0)
