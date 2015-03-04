@@ -5,8 +5,8 @@ import numpy as np
 import wx
 import wx.lib.newevent
 import abc
-from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight, \
-							 getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
+from helper_functions import getFrames, getFrame, getWidth, getHeight, sideBySide, redGreen, correctedSideBySide, returnValidImage, calibrateLeft, calibrateRight, getLeftCalibration, getRightCalibration
+from ros_helper_functions import getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
 from vtk_gui import VtkPointCloud
 
 class VideoFeed(wx.Panel):
@@ -115,7 +115,7 @@ class DepthMap(VideoFeed):
 		super(DepthMap, self).__init__(parent, cams, fps)
 	
 	def GetImage(self):
-		data = getDataFromROS(getFrames(self.Cams))
+		data = getDataFromROS(getFrames(self.Cams), (getLeftCalibration(), getRightCalibration()) )
 		if(data is None):
 			return returnValidImage(None, (1, 1))
 		(maxDist, pointCloudData) = data
@@ -144,7 +144,7 @@ class PointCloud(VideoFeed):
 		self.initialized = True
 	
 	def GetImage(self):
-		data = getDataFromROS(getFrames(self.Cams))
+		data = getDataFromROS(getFrames(self.Cams), (getLeftCalibration(), getRightCalibration()) )
 		if(self.initialized and data is not None):
 			(maxDist, pointCloudData) = data
 			self.vtkPointCloud.clearPoints()
