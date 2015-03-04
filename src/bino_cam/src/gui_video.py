@@ -155,7 +155,7 @@ class PointCloud(VideoFeed):
 			for i in range(pointCloudData.shape[0]):
 				for j in range(pointCloudData.shape[1]):
 					point = pointCloudData[i][j]
-					self.vtkPointCloud.addPoint( (i, j, point[3]) )
+					self.vtkPointCloud.addPoint( (j, i, point[3]) )
 			## May need rerender function call
 		return returnValidImage(None, (1, 1))
 	
