@@ -54,10 +54,12 @@ def __extractPointCloudData(data):
 	height = int(height)
 	width = int(width)
 	maxDist = 0
+#	print "data"
 	for i in range(width):
 		intermediate = []
 		for j in range(height):
 			point = next(iterData)
+#			print point
 			if(point[3]>maxDist):
 				maxDist=point[3]
 			intermediate.append(point)
@@ -92,18 +94,20 @@ def destroyPointCloud():
 def getDataFromROS(frames, dimensions, calibration):
 	global __imageQueue, __lastPointCloud
 	(leftCalibration, rightCalibration) = calibration
-	cameraSync = CamerasSync()
-	cameraSync.data = "full"
-	cameraSync.timeStamp = rospy.Time.now()
-	__pubAcquireImages.publish(cameraSync)
-	__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
-	__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, dimensions, cameraSync.timeStamp))
-	__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
-	__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, dimensions, cameraSync.timeStamp))
-	image = None
-	try:
+	lenImageQueue = len(__imageQueue)
+	if( lenImageQueue<10 ):
+		cameraSync = CamerasSync()
+		cameraSync.data = "full"
+		cameraSync.timeStamp = rospy.Time.now()
+		__pubAcquireImages.publish(cameraSync)
+		__pubImageLeft[0].publish(__constructROSImage(frames[0], cameraSync.timeStamp))
+		__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, dimensions, cameraSync.timeStamp))
+		__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
+		__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, dimensions, cameraSync.timeStamp))
+
+	if( lenImageQueue>0 ):
 		image = __imageQueue.pop(0)
-	except:
+	else:
 		# print "helper_functions, getImageFromROS: Empty Queue"
 		image = __lastPointCloud
 
