@@ -346,3 +346,98 @@ def __createFloatArrayFromTokens(lexer, shape):
 	return array
 
 ####################################################################################
+
+def openSavedStereoCalibration(filename):
+	global __leftCalibration, __rightCalibration
+	
+	(width, height, leftCalibration, rightCalibration) = __parseStereoCalibrationOstFile(filename)
+	 
+	if((width is None) or (height  is None) or (leftCalibration is None) or (rightCalibration  is None)):
+		return
+	
+	(cameraMatrix, distortion, rectification, projection) = leftCalibration
+	(rCameraMatrix, rDistortion, rRectification, rProjection) = rightCalibration
+	
+	__setCalibrationResolution(width, height)
+	
+	__leftCalibration = (1, cameraMatrix, distortion, rectification, projection)
+	__rightCalibration = (1, rCameraMatrix, rDistortion, rRectification, rProjection)
+
+#----------------------------------------------------------------------------------#
+
+def __parseStereoCalibrationOstFile(filename):
+	calibrationFile = file(filename, 'rt')
+	lexer = shlex.shlex(calibrationFile)
+	lexer.wordchars += ".-"
+	
+	width = None
+	height = None
+	cameraMatrix = None
+	distortion = None
+	rectification = None
+	projection = None
+	
+	rWidth = None
+	rHeight = None
+	rCameraMatrix = None
+	rDistortion = None
+	rRectification = None
+	rProjection = None
+	
+	token = None
+	while token != lexer.eof:
+		token = lexer.get_token()
+		
+		__w = __widthParser(token, lexer)
+		if(__w is not None):
+			if(width is None):
+				width = __w
+			elif(rWidth is None):
+				rWidth = __w
+		
+		__h = __heightParser(token, lexer)
+		if(__h is not None):
+			if(height is None):
+				height = __h
+			elif(rHeight is None):
+				rHeight = __h
+		
+		__cam = __cameraMatrix(token, lexer)
+		if(__cam is not None):
+			if(cameraMatrix is None):
+				cameraMatrix = __cam
+			elif(rCameraMatrix is None):
+				rCameraMatrix = __cam
+		
+		__dist = __distortion(token, lexer)
+		if(__dist is not None):
+			if(distortion is None):
+				distortion = __dist
+			elif(rDistortion is None):
+				rDistortion = __dist
+		
+		__rect = __rectification(token, lexer)
+		if(__rect is not None):
+			if(rectification is None):
+				rectification = __rect
+			elif(rRectification is None):
+				rRectification = __rect
+		
+		__proj = __projection(token, lexer)
+		if(__proj is not None):
+			if(projection is None):
+				projection = __proj
+			elif(rProjection is None):
+				rProjection = __proj
+	
+	leftCalibration = (cameraMatrix, distortion, rectification, projection)
+	rightCalibration = (rCameraMatrix, rDistortion, rRectification, rProjection)
+	
+	if((width is None) or (height  is None) or (cameraMatrix is None) or (distortion is None) or (rectification is None) or (projection is None)):
+		leftCalibration = None
+	if((rWidth is None) or (rHeight  is None) or (rCameraMatrix is None) or (rDistortion is None) or (rRectification is None) or (rProjection is None)):
+		rightCalibration = None
+	
+	return (min(width, rWidth), min(height, rHeight), leftCalibration, rightCalibration)
+
+####################################################################################
