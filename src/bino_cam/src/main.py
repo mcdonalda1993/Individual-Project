@@ -6,7 +6,7 @@ import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
-from camera_functions import setCameraResolutions16x9, openSavedCalibration
+from camera_functions import setCameraResolutions16x9, openSavedCalibration, openSavedStereoCalibration
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side", "Depth Map", "Point Cloud"]
@@ -68,6 +68,7 @@ class MainWindow(wx.Frame):
 		openCalibrationMenu = wx.Menu()
 		openCalibrate0 = openCalibrationMenu.Append(3, "Open calibration for left camera (&0) ")
 		openCalibrate1 = openCalibrationMenu.Append(4, "Open calibration for right camera (&1) ")
+		openStereoCalibrate = openCalibrationMenu.Append(5, "Open stereo calibration")
 		calibrationMenu.AppendSubMenu(openCalibrationMenu, "&Open saved calibration")
 		
 		# Creating the menubar.
@@ -83,6 +84,7 @@ class MainWindow(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.StartCalibration, calibrate1)
 		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate0)
 		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate1)
+		self.Bind(wx.EVT_MENU, self.OpenStereoCalibration, openStereoCalibrate)
 		
 		self.Show(True)
 		
@@ -163,6 +165,17 @@ class MainWindow(wx.Frame):
 			return	# the user changed idea...
 		
 		openSavedCalibration(openFileDialog.GetPath(), event.Id-3)
+		self.panel.FitInside()
+		self.panel.Layout()
+		self.Refresh()
+	
+	def OpenStereoCalibration(self, event):
+		openFileDialog = wx.FileDialog(self, "Open saved calibration", "", "","Calibration files (*.txt)|*.txt|Calibration files (*.ini)|*.ini", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+		
+		if openFileDialog.ShowModal() == wx.ID_CANCEL:
+			return	# the user changed idea...
+		
+		openSavedStereoCalibration(openFileDialog.GetPath())
 		self.panel.FitInside()
 		self.panel.Layout()
 		self.Refresh()
