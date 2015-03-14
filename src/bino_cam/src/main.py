@@ -185,4 +185,5 @@ if __name__ == '__main__':
 	processPool = Pool()
 	app = wx.App(False)
 	frame = MainWindow(None, "Binocular Algorithm Example", processPool)
+	frame.SetSize((900,700))
 	app.MainLoop()
