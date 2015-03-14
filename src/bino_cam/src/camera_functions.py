@@ -232,7 +232,7 @@ def openSavedCalibration(filename, camNo):
 	
 	left = (camNo==0)
 	
-	(width, height, cameraMatrix, distortion, rectification, projection) = __parseIniFile(filename)
+	(width, height, cameraMatrix, distortion, rectification, projection) = __parseSingleCalibrationOstFile(filename)
 	
 	if((width is None) or (height  is None) or (cameraMatrix is None) or (distortion is None) or (rectification is None) or (projection is None)):
 		return
@@ -246,7 +246,7 @@ def openSavedCalibration(filename, camNo):
 
 #----------------------------------------------------------------------------------#
 
-def __parseIniFile(filename):
+def __parseSingleCalibrationOstFile(filename):
 	calibrationFile = file(filename, 'rt')
 	lexer = shlex.shlex(calibrationFile)
 	lexer.wordchars += ".-"
