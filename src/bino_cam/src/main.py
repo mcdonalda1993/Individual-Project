@@ -6,7 +6,7 @@ import cv2
 import wx
 import wx.lib.scrolledpanel
 from multiprocessing import Pool
-from camera_functions import setCameraResolutions16x9, openSavedCalibration, openSavedStereoCalibration
+from camera_functions import setCameraResolutions16x9, openSavedCalibration, openSavedStereoCalibration, saveCalibration
 from gui_video import *
 
 displayOptions = ["Side by side", "Red-Green", "Corrected Side By Side", "Depth Map", "Point Cloud"]
@@ -71,6 +71,11 @@ class MainWindow(wx.Frame):
 		openStereoCalibrate = openCalibrationMenu.Append(5, "Open stereo calibration")
 		calibrationMenu.AppendSubMenu(openCalibrationMenu, "&Open saved calibration")
 		
+		saveCalibrationMenu = wx.Menu()
+		saveCalibrate0 = saveCalibrationMenu.Append(7, "Save calibration for left camera (&0) ")
+		saveCalibrate1 = saveCalibrationMenu.Append(8, "Save calibration for right camera (&1) ")
+		calibrationMenu.AppendSubMenu(saveCalibrationMenu, "&Save calibration")
+		
 		# Creating the menubar.
 		menuBar = wx.MenuBar()
 		menuBar.Append(filemenu,"&File") # Adding the "filemenu" to the MenuBar
@@ -85,6 +90,8 @@ class MainWindow(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate0)
 		self.Bind(wx.EVT_MENU, self.OpenCalibration, openCalibrate1)
 		self.Bind(wx.EVT_MENU, self.OpenStereoCalibration, openStereoCalibrate)
+		self.Bind(wx.EVT_MENU, self.SaveCalibration, saveCalibrate0)
+		self.Bind(wx.EVT_MENU, self.SaveCalibration, saveCalibrate1)
 		
 		self.Show(True)
 		
@@ -176,6 +183,17 @@ class MainWindow(wx.Frame):
 			return	# the user changed idea...
 		
 		openSavedStereoCalibration(openFileDialog.GetPath())
+		self.panel.FitInside()
+		self.panel.Layout()
+		self.Refresh()
+	
+	def OpenCalibration(self, event):
+		openFileDialog = wx.FileDialog(self, "Save calibration", "", "","Calibration files (*.txt)|*.txt|Calibration files (*.ini)|*.ini", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		
+		if openFileDialog.ShowModal() == wx.ID_CANCEL:
+			return	# the user changed idea...
+		
+		saveCalibration(openFileDialog.GetPath(), event.Id-7)
 		self.panel.FitInside()
 		self.panel.Layout()
 		self.Refresh()

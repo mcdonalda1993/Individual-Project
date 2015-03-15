@@ -441,3 +441,53 @@ def __parseStereoCalibrationOstFile(filename):
 	return (min(width, rWidth), min(height, rHeight), leftCalibration, rightCalibration)
 
 ####################################################################################
+
+def saveCalibration(filename, camNo):
+	
+	left = (camNo==0)
+	
+	if(left):
+		(1, cameraMatrix, distortion, rectification, projection) = __leftCalibration
+	else:
+		(1, cameraMatrix, distortion, rectification, projection) = __rightCalibration
+	
+	if((__calibrationWidth is None) or (__calibrationHeight  is None) or (cameraMatrix is None) or (distortion is None) or (rectification is None) or (projection is None)):
+		return
+	
+	f = open("filename", 'w')
+	f.write( __ostFormatString(__calibrationWidth, __calibrationHeight, cameraMatrix, distortion, rectification, projection) )
+	f.close()
+
+#----------------------------------------------------------------------------------#
+
+def __ostFormatString(w, h, m, d, r, p):
+	return \
+	"""# oST version 5.0 parameters
+
+
+	[image]
+
+	width
+	""" + w + """
+
+	height
+	""" + h + """
+
+	[narrow_stereo]
+
+	camera matrix
+	""" + m + """
+
+	distortion
+	""" + d + """
+
+	rectification
+	""" + r + """
+
+	projection
+	""" + p + """
+
+
+	"""
+
+####################################################################################
