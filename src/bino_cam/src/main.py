@@ -16,7 +16,7 @@ class MainWindow(wx.Frame):
 				
 		self.pool = processPool
 		
-		self.Cams = (cv2.VideoCapture(0), cv2.VideoCapture(1))
+		self.Cams = (cv2.VideoCapture(1), cv2.VideoCapture(2))
 		setCameraResolutions16x9(self.Cams, 720)
 		
 		wx.Frame.__init__(self, parent, title=title)
@@ -187,7 +187,7 @@ class MainWindow(wx.Frame):
 		self.panel.Layout()
 		self.Refresh()
 	
-	def OpenCalibration(self, event):
+	def SaveCalibration(self, event):
 		openFileDialog = wx.FileDialog(self, "Save calibration", "", "","Calibration files (*.txt)|*.txt|Calibration files (*.ini)|*.ini", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		
 		if openFileDialog.ShowModal() == wx.ID_CANCEL:
