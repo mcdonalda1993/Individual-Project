@@ -54,14 +54,14 @@ def __extractPointCloudData(data):
 	height = int(height)
 	width = int(width)
 	maxDist = 0
-#	print "data"
+	z = 2
+	print "PointCloud data received."
 	for i in range(width):
 		intermediate = []
 		for j in range(height):
 			point = next(iterData)
-#			print point
-			if(point[3]>maxDist):
-				maxDist=point[3]
+			if(point[z]>maxDist):
+				maxDist=point[z]
 			intermediate.append(point)
 		points.append(intermediate)
 	
@@ -73,12 +73,12 @@ def __extractPointCloudData(data):
 ####################################################################################
 
 def constructDepthMapImage(maxDist, points):
-	
+	z = 2
 	newPoints = []
 	for i in range(points.shape[0]):
 		intermediate = []
 		for j in range(points.shape[1]):
-			zPoint = points[i][j][3]
+			zPoint = points[i][j][z]
 			value = (zPoint/maxDist) * 255
 			intermediate.append((0, int(value), 0))
 		newPoints.append(intermediate)

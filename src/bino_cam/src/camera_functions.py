@@ -329,7 +329,7 @@ def __projection(token, lexer):
 	if(token.lower() != "projection"):
 		return
 	
-	return __createFloatArrayFromTokens(lexer, (4,3))
+	return __createFloatArrayFromTokens(lexer, (3,4))
 
 def __createFloatArrayFromTokens(lexer, shape):
 	numberOfElements = shape[0]*shape[1]

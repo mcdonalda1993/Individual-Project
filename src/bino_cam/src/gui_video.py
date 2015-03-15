@@ -146,6 +146,7 @@ class PointCloud(VideoFeed):
 		self.initialized = True
 	
 	def GetImage(self):
+		z = 2
 		dimensions = (getCalibrationWidth(), getCalibrationHeight())
 		calibrationInfo = (getLeftCalibration(), getRightCalibration())
 		data = getDataFromROS(getFrames(self.Cams), dimensions, calibrationInfo)
@@ -155,7 +156,7 @@ class PointCloud(VideoFeed):
 			for i in range(pointCloudData.shape[0]):
 				for j in range(pointCloudData.shape[1]):
 					point = pointCloudData[i][j]
-					self.vtkPointCloud.addPoint( (j, i, point[3]) )
+					self.vtkPointCloud.addPoint( (j, i, point[z]) )
 			## May need rerender function call
 		return returnValidImage(None, (1, 1))
 	
