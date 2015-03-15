@@ -75,16 +75,16 @@ def __extractPointCloudData(data):
 def constructDepthMapImage(maxDist, points):
 	z = 2
 	newPoints = []
+	shape = (points.shape[0], points.shape[1], 3)
+	
 	for i in range(points.shape[0]):
-		intermediate = []
 		for j in range(points.shape[1]):
 			zPoint = points[i][j][z]
 			value = (zPoint/maxDist) * 255
-			intermediate.append((0, int(value), 0))
-		newPoints.append(intermediate)
-
+			newPoints.append((0, int(value), 0))
+	
 	image = np.array(newPoints, dtype=np.uint8)
-
+	image = np.reshape(image, shape)
 	return image
 
 def destroyPointCloud():

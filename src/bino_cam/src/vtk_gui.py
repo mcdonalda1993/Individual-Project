@@ -2,6 +2,7 @@
 
 import wx
 import vtk
+import random
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 class VtkPointCloud(wx.Panel):
@@ -61,6 +62,25 @@ class VtkPointCloud(wx.Panel):
 		else:
 			r = random.randint(0, self.maxNumPoints)
 			self.vtkPoints.SetPoint(r, point[:])
+		
+		self.vtkCells.Modified()
+		self.vtkPoints.Modified()
+		self.vtkDepth.Modified()
+	
+	def addPoints(self, points):
+		z = 2
+		for i in range(points.shape[0]):
+			for j in range(points.shape[1]):
+				point = points[i][j]
+				point = (j, -i, point[z])
+				if self.vtkPoints.GetNumberOfPoints() < self.maxNumPoints:
+					pointId = self.vtkPoints.InsertNextPoint(point[:])
+					self.vtkDepth.InsertNextValue(point[2])
+					self.vtkCells.InsertNextCell(1)
+					self.vtkCells.InsertCellPoint(pointId)
+				else:
+					r = random.randint(0, self.maxNumPoints)
+					self.vtkPoints.SetPoint(r, point[:])
 		
 		self.vtkCells.Modified()
 		self.vtkPoints.Modified()

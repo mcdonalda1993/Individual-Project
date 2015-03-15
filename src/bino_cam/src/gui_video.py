@@ -110,7 +110,7 @@ class CorrectedSideBySide(VideoFeed):
 
 class DepthMap(VideoFeed):
 	
-	def __init__(self, parent, cams, fps=30):
+	def __init__(self, parent, cams, fps=1.0/6):
 		initializePointCloud()
 		super(DepthMap, self).__init__(parent, cams, fps)
 	
@@ -129,7 +129,7 @@ class DepthMap(VideoFeed):
 
 class PointCloud(VideoFeed):
 	
-	def __init__(self, parent, cams, fps=30):
+	def __init__(self, parent, cams, fps=1.0/6):
 		self.initialized = False
 		initializePointCloud()
 		
@@ -153,11 +153,7 @@ class PointCloud(VideoFeed):
 		if(self.initialized and data is not None):
 			(maxDist, pointCloudData) = data
 			self.vtkPointCloud.clearPoints()
-			for i in range(pointCloudData.shape[0]):
-				for j in range(pointCloudData.shape[1]):
-					point = pointCloudData[i][j]
-					self.vtkPointCloud.addPoint( (j, i, point[z]) )
-			## May need rerender function call
+			self.vtkPointCloud.addPoints(pointCloudData)
 		return returnValidImage(None, (1, 1))
 	
 	def Destroy(self):
