@@ -68,11 +68,10 @@ class VtkPointCloud(wx.Panel):
 		self.vtkDepth.Modified()
 	
 	def addPoints(self, points):
-		z = 2
 		for i in range(points.shape[0]):
 			for j in range(points.shape[1]):
 				point = points[i][j]
-				point = (j, -i, point[z])
+				point = (point[0], point[1], point[2])
 				if self.vtkPoints.GetNumberOfPoints() < self.maxNumPoints:
 					pointId = self.vtkPoints.InsertNextPoint(point[:])
 					self.vtkDepth.InsertNextValue(point[2])
