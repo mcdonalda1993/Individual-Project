@@ -112,7 +112,13 @@ class DepthMap(VideoFeed):
 	
 	def __init__(self, parent, cams, fps=1.0/6):
 		initializePointCloud()
+		
 		super(DepthMap, self).__init__(parent, cams, fps)
+		
+		self.newDataButton = wx.Button(panel, label="Get new data")
+		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButton)
+		
+		self.mainSizer.Prepend(self.newDataButton, wx.EXPAND)
 	
 	def GetImage(self):
 		dimensions = (getCalibrationWidth(), getCalibrationHeight())
@@ -122,6 +128,12 @@ class DepthMap(VideoFeed):
 			return returnValidImage(None, (1, 1))
 		(maxDist, pointCloudData) = data
 		return constructDepthMapImage(maxDist, pointCloudData)
+	
+	def newDataButton(self, event):
+		if(self.newDataButton.GetValue()):
+			self.timer.Start()
+		else:
+			self.timer.Stop()
 	
 	def Destroy(self):
 		destroyPointCloud()
@@ -135,11 +147,15 @@ class PointCloud(VideoFeed):
 		
 		super(PointCloud, self).__init__(parent, cams, fps)
 		
-		self.imagePanel.Show(False)		
+		self.imagePanel.Show(False)
+		
+		self.newDataButton = wx.Button(panel, label="Get new data")
+		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButton)
 		
 		self.vtkPointCloud = VtkPointCloud(self)
 		self.vtkPointCloud.SetSize( (getWidth(), getHeight()) )
 		
+		self.mainSizer.Prepend(self.newDataButton, wx.EXPAND)
 		self.mainSizer.Prepend(self.vtkPointCloud.GetSize(), wx.EXPAND)
 
 		self.Layout()
@@ -155,6 +171,12 @@ class PointCloud(VideoFeed):
 			self.vtkPointCloud.clearPoints()
 			self.vtkPointCloud.addPoints(pointCloudData)
 		return returnValidImage(None, (1, 1))
+	
+	def newDataButton(self, event):
+		if(self.newDataButton.GetValue()):
+			self.timer.Start()
+		else:
+			self.timer.Stop()
 	
 	def Destroy(self):
 		destroyPointCloud()
