@@ -117,8 +117,13 @@ class DepthMap(VideoFeed):
 
 		self.newDataButton = wx.Button(self, label="Get new data")
 		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButtonPushed)
+		self.hotNearToggle = wx.ToggleButton(self, label="Hot Near Toggle")
 		
-		self.mainSizer.Prepend(self.newDataButton, wx.EXPAND)
+		calibrationSizer = wx.BoxSizer(wx.HORIZONTAL)
+		calibrationSizer.Add(self.newDataButton, flag=wx.EXPAND)
+		calibrationSizer.Add(self.hotNearToggle, flag=wx.EXPAND)
+		
+		self.mainSizer.Prepend(calibrationSizer, wx.EXPAND)
 	
 	def GetImage(self):
 		data = getDataFromROS()
@@ -126,10 +131,11 @@ class DepthMap(VideoFeed):
 			return returnValidImage(None, (1, 1))
 			
 		(maxDist, pointCloudData) = data
-		image = constructDepthMapImage(True, maxDist, pointCloudData)
+		image = constructDepthMapImage(self.hotNearToggle.GetValue(), maxDist, pointCloudData)
 		return image
 	
 	def newDataButtonPushed(self, event):
+		print "New images sent to ROS."
 		dimensions = (getCalibrationWidth(), getCalibrationHeight())
 		calibrationInfo = (getLeftCalibration(), getRightCalibration())
 		data = sendDataToROS(getFrames(self.Cams), dimensions, calibrationInfo)
@@ -171,6 +177,7 @@ class PointCloud(VideoFeed):
 		return returnValidImage(None, (1, 1))
 	
 	def newDataButtonPushed(self, event):
+		print "New images sent to ROS."
 		dimensions = (getCalibrationWidth(), getCalibrationHeight())
 		calibrationInfo = (getLeftCalibration(), getRightCalibration())
 		data = sendDataToROS(getFrames(self.Cams), dimensions, calibrationInfo)

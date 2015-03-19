@@ -80,8 +80,10 @@ def constructDepthMapImage(hotNear, maxDist, points):
 	for i in range(points.shape[0]):
 		for j in range(points.shape[1]):
 			zPoint = points[i][j][z]
-#			value = (zPoint/maxDist) * 255
-			value = (zPoint/maxDist) * 255
+			if(hotNear):
+				value = (1 - (zPoint/maxDist)) * 255
+			else:
+				value = (zPoint/maxDist) * 255
 			newPoints.append((0, int(value), 0))
 	
 	image = np.array(newPoints, dtype=np.uint8)
