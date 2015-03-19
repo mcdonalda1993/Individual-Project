@@ -6,7 +6,7 @@ import wx
 import wx.lib.newevent
 import abc
 from camera_functions import *
-from ros_functions import getDataFromROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
+from ros_functions import getDataFromROS, sendDataToROS, constructDepthMapImage, initializePointCloud, destroyPointCloud
 from vtk_gui import VtkPointCloud
 
 class VideoFeed(wx.Panel):
@@ -114,26 +114,25 @@ class DepthMap(VideoFeed):
 		initializePointCloud()
 		
 		super(DepthMap, self).__init__(parent, cams, fps)
-		
-		self.newDataButton = wx.Button(panel, label="Get new data")
-		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButton)
+
+		self.newDataButton = wx.Button(self, label="Get new data")
+		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButtonPushed)
 		
 		self.mainSizer.Prepend(self.newDataButton, wx.EXPAND)
 	
 	def GetImage(self):
-		dimensions = (getCalibrationWidth(), getCalibrationHeight())
-		calibrationInfo = (getLeftCalibration(), getRightCalibration())
-		data = getDataFromROS(getFrames(self.Cams), dimensions, calibrationInfo)
+		data = getDataFromROS()
 		if(data is None):
 			return returnValidImage(None, (1, 1))
+			
 		(maxDist, pointCloudData) = data
-		return constructDepthMapImage(maxDist, pointCloudData)
+		image = constructDepthMapImage(True, maxDist, pointCloudData)
+		return image
 	
-	def newDataButton(self, event):
-		if(self.newDataButton.GetValue()):
-			self.timer.Start()
-		else:
-			self.timer.Stop()
+	def newDataButtonPushed(self, event):
+		dimensions = (getCalibrationWidth(), getCalibrationHeight())
+		calibrationInfo = (getLeftCalibration(), getRightCalibration())
+		data = sendDataToROS(getFrames(self.Cams), dimensions, calibrationInfo)
 	
 	def Destroy(self):
 		destroyPointCloud()
@@ -149,34 +148,32 @@ class PointCloud(VideoFeed):
 		
 		self.imagePanel.Show(False)
 		
-		self.newDataButton = wx.Button(panel, label="Get new data")
-		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButton)
+		self.newDataButton = wx.Button(self, label="Get new data")
+		self.newDataButton.Bind(wx.EVT_BUTTON, self.newDataButtonPushed)
 		
 		self.vtkPointCloud = VtkPointCloud(self)
 		self.vtkPointCloud.SetSize( (getWidth(), getHeight()) )
 		
-		self.mainSizer.Prepend(self.newDataButton, wx.EXPAND)
+
 		self.mainSizer.Prepend(self.vtkPointCloud.GetSize(), wx.EXPAND)
+		self.mainSizer.Prepend(self.newDataButton)
 
 		self.Layout()
 		self.initialized = True
 	
 	def GetImage(self):
 		z = 2
-		dimensions = (getCalibrationWidth(), getCalibrationHeight())
-		calibrationInfo = (getLeftCalibration(), getRightCalibration())
-		data = getDataFromROS(getFrames(self.Cams), dimensions, calibrationInfo)
+		data = getDataFromROS()
 		if(self.initialized and data is not None):
 			(maxDist, pointCloudData) = data
 			self.vtkPointCloud.clearPoints()
 			self.vtkPointCloud.addPoints(pointCloudData)
 		return returnValidImage(None, (1, 1))
 	
-	def newDataButton(self, event):
-		if(self.newDataButton.GetValue()):
-			self.timer.Start()
-		else:
-			self.timer.Stop()
+	def newDataButtonPushed(self, event):
+		dimensions = (getCalibrationWidth(), getCalibrationHeight())
+		calibrationInfo = (getLeftCalibration(), getRightCalibration())
+		data = sendDataToROS(getFrames(self.Cams), dimensions, calibrationInfo)
 	
 	def Destroy(self):
 		destroyPointCloud()

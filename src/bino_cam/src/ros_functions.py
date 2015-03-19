@@ -67,12 +67,12 @@ def __extractPointCloudData(data):
 	
 	points = np.array(points)
 	points = np.swapaxes(points, 0, 1)
-	
+	print "New point cloud available"
 	return (maxDist, points)
 
 ####################################################################################
 
-def constructDepthMapImage(maxDist, points):
+def constructDepthMapImage(hotNear, maxDist, points):
 	z = 2
 	newPoints = []
 	shape = (points.shape[0], points.shape[1], 3)
@@ -80,22 +80,34 @@ def constructDepthMapImage(maxDist, points):
 	for i in range(points.shape[0]):
 		for j in range(points.shape[1]):
 			zPoint = points[i][j][z]
+#			value = (zPoint/maxDist) * 255
 			value = (zPoint/maxDist) * 255
 			newPoints.append((0, int(value), 0))
 	
 	image = np.array(newPoints, dtype=np.uint8)
 	image = np.reshape(image, shape)
+	print "New Depth Map Image"
 	return image
 
 def destroyPointCloud():
 	global __proc
 	__proc.send_signal(signal.SIGINT)
 
-def getDataFromROS(frames, dimensions, calibration):
+def getDataFromROS():
+	global __imageQueue, __lastPointCloud
+	if( len(__imageQueue)>0 ):
+		image = __imageQueue.pop(0)
+	else:
+		# print "helper_functions, getImageFromROS: Empty Queue"
+		image = __lastPointCloud
+
+	__lastPointCloud = image
+	return image
+
+def sendDataToROS(frames, dimensions, calibration):
 	global __imageQueue, __lastPointCloud
 	(leftCalibration, rightCalibration) = calibration
-	lenImageQueue = len(__imageQueue)
-	if( lenImageQueue<10 ):
+	if( len(__imageQueue)<10 ):
 		cameraSync = CamerasSync()
 		cameraSync.data = "full"
 		cameraSync.timeStamp = rospy.Time.now()
@@ -104,15 +116,6 @@ def getDataFromROS(frames, dimensions, calibration):
 		__pubImageLeft[1].publish(__constructROSCameraInfo(leftCalibration, dimensions, cameraSync.timeStamp))
 		__pubImageRight[0].publish(__constructROSImage(frames[1], cameraSync.timeStamp))
 		__pubImageRight[1].publish(__constructROSCameraInfo(rightCalibration, dimensions, cameraSync.timeStamp))
-
-	if( lenImageQueue>0 ):
-		image = __imageQueue.pop(0)
-	else:
-		# print "helper_functions, getImageFromROS: Empty Queue"
-		image = __lastPointCloud
-
-	__lastPointCloud = image
-	return image
 
 #----------------------------------------------------------------------------------#
 
