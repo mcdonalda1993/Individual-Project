@@ -16,7 +16,7 @@ class MainWindow(wx.Frame):
 				
 		self.pool = processPool
 		
-		self.Cams = (cv2.VideoCapture(1), cv2.VideoCapture(2))
+		self.Cams = (cv2.VideoCapture(4), cv2.VideoCapture(5))
 		setCameraResolutions16x9(self.Cams, 720)
 		
 		wx.Frame.__init__(self, parent, title=title)
@@ -134,7 +134,10 @@ class MainWindow(wx.Frame):
 		self.redGreen.Show(False)
 		self.correctedSideBySide.Show(False)
 		if(hasattr(self, "calibrationFeed")):
-			self.calibrationFeed.Show(False)
+			try:
+				self.calibrationFeed.Show(False)
+			except:
+				pass
 		if(hasattr(self, "depthMap")):
 			self.depthMap.Destroy()
 		if(hasattr(self, "pointCloud")):
