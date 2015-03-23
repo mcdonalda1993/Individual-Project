@@ -1,0 +1,9 @@
+sensor_msgs/Image imL
+sensor_msgs/Image imR
+---
+stereo_msgs/DisparityImage dispH
+stereo_msgs/DisparityImage dispV
+stereo_msgs/DisparityImage dispC
+ug_stereomatcher/foveatedstack fdispH
+ug_stereomatcher/foveatedstack fdispV
+ug_stereomatcher/foveatedstack fdispC
