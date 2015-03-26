@@ -5,3 +5,4 @@ src/bino_cam/src/testwx.py
 src/setup.bash
 src/setup.sh
 src/setup.zsh
+bino_cam/src/testwx.py
