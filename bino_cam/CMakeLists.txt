@@ -8,7 +8,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  OpenCV
+  sensor_msgs
+  opencv2
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -96,7 +98,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
+#  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library

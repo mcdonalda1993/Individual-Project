@@ -2,8 +2,6 @@ build/
 devel/
 install/
 src/bino_cam/src/testwx.py
-Camera 1 Calibration data/
-Camera 0 Calibration data/
 src/setup.bash
 src/setup.sh
 src/setup.zsh
