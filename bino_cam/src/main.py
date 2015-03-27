@@ -125,7 +125,7 @@ class MainWindow(wx.Frame):
 	
 	def OnAbout(self, event):
 		# A message dialog box with an OK button. wx.OK is a standard ID in wxWidgets.
-		dlg = wx.MessageDialog( self, "TO DO", "About Binocular Algorithm Example", wx.OK)
+		dlg = wx.MessageDialog( self, "Binocular Algorithm Example", "A demonstration system for the University of Glasgows GPU accelerated matching algorithm", wx.OK)
 		dlg.ShowModal() # Show it
 		dlg.Destroy() # finally destroy it when finished.
 
